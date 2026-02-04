@@ -1,0 +1,311 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  STORE_MANAGER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  image     String?
+  emailVerified DateTime?
+  role      UserRole @default(USER)
+  accounts  Account[]
+  sessions  Session[]
+  profile   Usuario?
+  stores    Store[]
+  carts     Cart[]
+  orders    Order[]
+  createdStores Store[] @relation("StoreCreator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Usuario {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  fullName             String?
+  birthDate            DateTime?
+  cpf                  String?
+  whatsapp             String?
+  whatsappCountryCode  String?
+  whatsappConsent      Boolean   @default(false)
+  isClient             Boolean   @default(false)
+  isStore              Boolean   @default(false)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addresses Address[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  usuarioId    String
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String
+  zipCode      String
+  latitude     Float?
+  longitude    Float?
+  isPrimary    Boolean @default(false)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Store {
+  id          String  @id @default(cuid())
+  userId      String
+  createdBy   String? // Quem criou a loja (gerente/admin)
+  name        String
+  slug        String? @unique
+  description String?
+  category    String
+  cnpj        String  @unique
+  phone       String
+  email       String
+  image       String? // URL da imagem da loja
+
+  // Endereço da loja
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String
+  zipCode      String
+  latitude     Float?
+  longitude    Float?
+
+  // Configurações de pedido
+  minimumOrder    Float? // Valor mínimo de compras
+  deliveryFee     Float? // Taxa de entrega
+  freeShippingThreshold Float? // Valor mínimo para frete grátis
+
+  isOpen      Boolean @default(true) // Se a loja está aberta para pedidos
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creator  User?     @relation("StoreCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  products Product[]
+  pixKeys  PixKey[]
+  carts    Cart[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PixKey {
+  id        String  @id @default(cuid())
+  storeId   String
+  type      String  // cpf, cnpj, email, phone, random
+  key       String
+  isPrimary Boolean @default(false)
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  storeId     String
+  name        String
+  description String?
+  price       Float
+  images      String[] // Campo único para múltiplas imagens
+  available   Boolean @default(true)
+  stock       Int?     // Quantidade disponível em estoque (opcional - null = ilimitado)
+
+  store     Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String?
+  storeId   String
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, storeId])
+  @@unique([sessionId, storeId])
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id           String   @id @default(cuid())
+  userId       String
+  storeId      String
+  items        Json     // Array de { productId, productName, price, quantity }
+  subtotal     Float
+  deliveryFee  Float    @default(0)
+  total        Float
+  status       String   @default("pending") // pending, confirmed, preparing, delivering, completed, cancelled
+  
+  // Informações de entrega
+  deliveryType  String?  @default("delivery") // delivery, pickup
+  deliveryAddress Json?  // Dados do endereço de entrega selecionado
+  
+  // Informações de pagamento
+  paymentMethod String? // pix, credit, debit, cash
+  needsChange   Boolean? @default(false) // se precisa de troco (apenas para cash)
+  changeAmount  Float?   // valor para troco (apenas para cash)
+  
+  // Informações do cliente
+  customerName  String?
+  customerPhone String?
+  
+  // Informações da loja no momento do pedido
+  storeName     String
+  storePhone    String
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([storeId])
+  @@index([status])
+}
+
+model SalesLog {
+  id              String   @id @default(cuid())
+  
+  // Referência ao pedido original (pode ser deletado)
+  orderId         String
+  
+  // Dados do pedido no momento da venda
+  orderStatus     String
+  subtotal        Float
+  deliveryFee     Float
+  total           Float
+  paymentMethod   String?
+  needsChange     Boolean?
+  changeAmount    Float?
+  
+  // Dados completos dos itens vendidos
+  items           Json     // Array de { productId, productName, price, quantity, productDescription }
+  
+  // Dados do cliente no momento da venda
+  customerId      String
+  customerEmail   String
+  customerName    String?
+  customerPhone   String?
+  customerCpf     String?
+  customerWhatsapp String?
+  
+  // Dados da loja no momento da venda
+  storeId         String
+  storeName       String
+  storeEmail      String
+  storePhone      String
+  storeCnpj       String
+  storeCategory   String
+  storeAddress    String   // Endereço completo da loja
+  
+  // Dados de entrega (se houver)
+  deliveryAddress String?  // Endereço de entrega completo
+  
+  // Metadados
+  createdAt       DateTime @default(now())
+  
+  @@index([orderId])
+  @@index([customerId])
+  @@index([storeId])
+  @@index([createdAt])
+}
+
+model AdminSettings {
+  id                        String   @id @default(cuid())
+  key                       String   @unique
+  value                     Boolean  @default(false)
+  description               String?
+  
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+}
