@@ -92,11 +92,7 @@ function ProductsPageContent() {
   const addToCart = async (productId) => {
     // Verificar se o usuário está logado
     if (!session) {
-      router.push(
-        `/login?callbackUrl=${encodeURIComponent(
-          window.location.pathname + window.location.search,
-        )}`,
-      );
+      router.push("/login");
       return;
     }
 

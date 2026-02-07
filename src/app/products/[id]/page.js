@@ -64,9 +64,7 @@ export default function ProductPage() {
   // Função para adicionar ao carrinho
   const addToCart = async () => {
     if (!session) {
-      router.push(
-        `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`,
-      );
+      router.push("/login");
       return;
     }
 

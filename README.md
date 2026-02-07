@@ -269,14 +269,12 @@ public/
 
 ### Carrinho de Compras
 
-Cada loja possui seu próprio carrinho independente:
-
-- ✅ Carrinho específico por loja (`/lojas/[slug]/carrinho`)
-- ✅ Adicionar produtos ao carrinho da loja atual
+- ✅ Carrinho de compras unificado para todas as lojas
+- ✅ Adicionar produtos de diferentes lojas ao mesmo carrinho
 - ✅ Atualizar quantidade de itens (botões + e - ou digitação direta com confirmação)
 - ✅ Remover itens do carrinho
 - ✅ Limpar carrinho completo
-- ✅ Cálculo automático de subtotais e total
+- ✅ Cálculo automático de subtotais e total (por loja no checkout)
 - ✅ Frete grátis baseado no valor mínimo da loja
 - ✅ Notificações toast não intrusivas (sem mover layout)
 - ✅ Proteção: redireciona para login se não autenticado

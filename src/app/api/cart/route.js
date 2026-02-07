@@ -35,7 +35,6 @@ export async function GET(request) {
                 createdAt: "asc",
               },
             },
-            store: true,
           },
         });
       }
@@ -55,7 +54,6 @@ export async function GET(request) {
               createdAt: "asc",
             },
           },
-          store: true,
         },
       });
     }
@@ -142,25 +140,14 @@ export async function POST(request) {
       });
     }
 
-    // Se existe carrinho mas é de loja diferente, retornar erro
-    if (cart && cart.storeId !== product.storeId) {
-      return NextResponse.json(
-        {
-          error:
-            "Você já tem produtos de outra loja no carrinho. Finalize ou limpe o carrinho antes de adicionar produtos de uma loja diferente.",
-        },
-        { status: 400 },
-      );
-    }
-
     // Se não existe carrinho, criar
     if (!cart) {
+      const cartData = userId 
+        ? { userId }
+        : { sessionId };
+
       cart = await prisma.cart.create({
-        data: {
-          userId,
-          sessionId: !userId ? sessionId : null,
-          storeId: product.storeId,
-        },
+        data: cartData,
       });
     }
 
@@ -208,7 +195,6 @@ export async function POST(request) {
             createdAt: "asc",
           },
         },
-        store: true,
       },
     });
 
@@ -249,7 +235,7 @@ export async function DELETE(request) {
 
     if (userId) {
       await prisma.cart.deleteMany({
-        where: { userId },
+        where: { userId: userId },
       });
     } else if (sessionId) {
       await prisma.cart.deleteMany({

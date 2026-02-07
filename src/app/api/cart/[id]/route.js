@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 
-// PUT - Atualizar quantidade do item
-export async function PUT(request, { params }) {
+// PATCH - Atualizar quantidade do item
+export async function PATCH(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
     const cookieStore = await cookies();
@@ -74,7 +74,6 @@ export async function PUT(request, { params }) {
             createdAt: "asc",
           },
         },
-        store: true,
       },
     });
 
@@ -162,7 +161,6 @@ export async function DELETE(request, { params }) {
             createdAt: "asc",
           },
         },
-        store: true,
       },
     });
 

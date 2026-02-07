@@ -96,7 +96,7 @@ export default function SalesLogsPage() {
   const handleDeleteLog = async (logId) => {
     if (
       !confirm(
-        "Tem certeza que deseja excluir este log de venda? Esta ação não pode ser desfeita."
+        "Tem certeza que deseja excluir este log de venda? Esta ação não pode ser desfeita.",
       )
     ) {
       return;
@@ -408,7 +408,7 @@ export default function SalesLogsPage() {
                 Mostrando {(pagination.page - 1) * pagination.limit + 1} a{" "}
                 {Math.min(
                   pagination.page * pagination.limit,
-                  pagination.totalCount
+                  pagination.totalCount,
                 )}{" "}
                 de {pagination.totalCount} resultados
               </div>

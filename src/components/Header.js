@@ -11,11 +11,6 @@ export default function Header() {
 
   // Função para validar e sanitizar callbackUrl (apenas URLs internas)
   const getLoginLink = () => {
-    // Se o usuário estiver em uma página de loja ou qualquer página interna,
-    // passar como callbackUrl para voltar após login
-    if (pathname && !pathname.includes("login")) {
-      return `/login?callbackUrl=${encodeURIComponent(pathname)}`;
-    }
     return "/login";
   };
 

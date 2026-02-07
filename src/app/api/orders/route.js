@@ -144,11 +144,11 @@ export async function POST(request) {
     const body = await request.json();
     console.log("Body recebido:", JSON.stringify(body, null, 2));
 
-    const {
+    let {
       storeId,
       items,
       subtotal,
-      deliveryFee,
+      deliveryFee = 0,
       total,
       customerName,
       customerPhone,
@@ -159,6 +159,12 @@ export async function POST(request) {
       deliveryAddress,
     } = body;
 
+    // Converter valores numéricos para número se forem strings
+    subtotal = typeof subtotal === "string" ? parseFloat(subtotal) : subtotal;
+    total = typeof total === "string" ? parseFloat(total) : total;
+    deliveryFee = typeof deliveryFee === "string" ? parseFloat(deliveryFee) : deliveryFee;
+    changeAmount = changeAmount ? (typeof changeAmount === "string" ? parseFloat(changeAmount) : changeAmount) : null;
+
     const errors = [];
 
     // Validações
@@ -168,10 +174,10 @@ export async function POST(request) {
     if (!items || !Array.isArray(items) || items.length === 0) {
       errors.push("Items do pedido são obrigatórios");
     }
-    if (typeof subtotal !== "number" || subtotal <= 0) {
+    if (!Number.isFinite(subtotal) || subtotal <= 0) {
       errors.push("Subtotal inválido");
     }
-    if (typeof total !== "number" || total <= 0) {
+    if (!Number.isFinite(total) || total <= 0) {
       errors.push("Total inválido");
     }
 
@@ -364,18 +370,30 @@ export async function POST(request) {
       // Não falhar se não conseguir enviar o email
     }
 
-    // Limpar carrinho do usuário para esta loja
+    // Limpar os itens comprados do carrinho do usuário
     try {
-      console.log("Limpando carrinho...");
-      await prisma.cart.deleteMany({
+      console.log("Limpando itens do carrinho...");
+      const cart = await prisma.cart.findFirst({
         where: {
           userId: session.user.id,
-          storeId,
         },
       });
-      console.log("Carrinho limpo");
+
+      if (cart) {
+        const productIdsInOrder = items.map((item) => item.productId);
+
+        await prisma.cartItem.deleteMany({
+          where: {
+            cartId: cart.id,
+            productId: {
+              in: productIdsInOrder,
+            },
+          },
+        });
+        console.log("Itens comprados foram removidos do carrinho.");
+      }
     } catch (cartError) {
-      console.error("Erro ao limpar carrinho:", cartError);
+      console.error("Erro ao limpar itens do carrinho:", cartError);
       // Não falhar se não conseguir limpar o carrinho
     }
 

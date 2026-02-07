@@ -48,7 +48,7 @@ function ProfileContent() {
   // Ler parâmetro tab da URL
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && ["personal", "addresses", "stores"].includes(tab)) {
+    if (tab && ["personal", "addresses", "stores", "cart"].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -658,6 +658,16 @@ function ProfileContent() {
               >
                 Minhas lojas
               </button>
+              <button
+                onClick={() => setActiveTab("cart")}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "cart"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Meu Carrinho
+              </button>
             </nav>
           </div>
 
@@ -1094,6 +1104,29 @@ function ProfileContent() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Cart Tab */}
+          {activeTab === "cart" && (
+            <div>
+              <div className="mb-6 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Meu Carrinho
+                </h2>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <p className="text-gray-700 mb-4">
+                  Acesse seu carrinho de compras para visualizar e gerenciar
+                  seus itens.
+                </p>
+                <Link
+                  href="/painel/carrinho"
+                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors"
+                >
+                  Ir para o Carrinho
+                </Link>
+              </div>
             </div>
           )}
         </div>

@@ -7,23 +7,24 @@ export const metadata = {
   title: "Nosso Local",
   description: "Shopping virtual para o comércio local",
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Nosso Local",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    minimumScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-    viewportFit: "cover",
-  },
   verification: {
     google: "D1VrU2-MBaQS5OfUt2DAcErgME0Ht0Tord2YhSdSrYo",
   },
+};
+
+export const viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {

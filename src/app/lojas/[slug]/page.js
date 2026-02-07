@@ -113,13 +113,11 @@ export default function LojaPage() {
   // Carregar contagem do carrinho
   useEffect(() => {
     const fetchCartCount = async () => {
-      if (!store) return;
-
       try {
         const response = await fetch("/api/cart");
         if (response.ok) {
           const data = await response.json();
-          if (data.cart && data.cart.storeId === store.id) {
+          if (data.cart && data.cart.items) {
             const count = data.cart.items.reduce(
               (total, item) => total + item.quantity,
               0,
@@ -133,7 +131,7 @@ export default function LojaPage() {
     };
 
     fetchCartCount();
-  }, [store]);
+  }, []);
 
   // Detectar scroll para mostrar carrinho flutuante
   useEffect(() => {
@@ -163,9 +161,7 @@ export default function LojaPage() {
   const addToCart = async (product) => {
     // Verificar se o usuário está logado
     if (!session) {
-      router.push(
-        `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`,
-      );
+      router.push("/login");
       return;
     }
 
@@ -187,7 +183,7 @@ export default function LojaPage() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.cart && data.cart.storeId === store.id) {
+        if (data.cart && data.cart.items) {
           const count = data.cart.items.reduce(
             (total, item) => total + item.quantity,
             0,
@@ -525,7 +521,7 @@ export default function LojaPage() {
               )}
               {!store.isOwner && (
                 <Link
-                  href={`/lojas/${slug}/carrinho`}
+                  href={`/painel/carrinho`}
                   className={`bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center text-sm sm:text-base ${
                     showFloatingCart && cartItemCount > 0 ? "hidden" : ""
                   }`}
@@ -811,7 +807,7 @@ export default function LojaPage() {
       {showFloatingCart && cartItemCount > 0 && !store?.isOwner && (
         <div className="fixed top-4 right-4 z-[9999] md:top-4 md:right-4 pointer-events-none safe-area-inset">
           <Link
-            href={`/lojas/${slug}/carrinho`}
+            href={`/painel/carrinho`}
             className="bg-green-600 text-white rounded-full p-3 md:p-4 shadow-2xl hover:bg-green-700 transition-all duration-300 hover:scale-110 flex items-center justify-center relative pointer-events-auto border-2 border-white"
             title="Ver carrinho"
             style={{ zIndex: 9999 }}

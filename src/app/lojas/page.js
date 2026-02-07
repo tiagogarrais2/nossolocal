@@ -54,8 +54,8 @@ function LojasContent() {
         setLoading(true);
         const response = await fetch(
           `/api/stores?city=${encodeURIComponent(
-            cidade
-          )}&state=${encodeURIComponent(estado)}`
+            cidade,
+          )}&state=${encodeURIComponent(estado)}`,
         );
         if (response.ok) {
           const data = await response.json();
