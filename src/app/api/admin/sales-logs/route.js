@@ -21,7 +21,7 @@ export async function GET(request) {
     if (!isAdmin(session.user.email)) {
       return NextResponse.json(
         { error: "Acesso negado. Você não é administrador." },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -108,7 +108,7 @@ export async function GET(request) {
     console.error("Erro ao buscar logs de vendas:", error);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -124,17 +124,18 @@ export async function DELETE(request) {
     if (!isAdmin(session.user.email)) {
       return NextResponse.json(
         { error: "Acesso negado. Você não é administrador." },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const deleteOrder = searchParams.get("deleteOrder") === "true";
 
     if (!id) {
       return NextResponse.json(
         { error: "ID do log é obrigatório" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -146,8 +147,16 @@ export async function DELETE(request) {
     if (!log) {
       return NextResponse.json(
         { error: "Log de venda não encontrado" },
-        { status: 404 }
+        { status: 404 },
       );
+    }
+
+    // Se deleteOrder for true, deletar tanto o log quanto a ordem
+    if (deleteOrder && log.orderId) {
+      // Deletar a ordem associada (isso vai cascatear para DeletePermission se existir)
+      await prisma.order.deleteMany({
+        where: { id: log.orderId },
+      });
     }
 
     // Deletar o log
@@ -156,14 +165,14 @@ export async function DELETE(request) {
     });
 
     return NextResponse.json(
-      { message: "Log de venda deletado com sucesso" },
-      { status: 200 }
+      { message: "Venda e log deletados com sucesso" },
+      { status: 200 },
     );
   } catch (error) {
     console.error("Erro ao deletar log de venda:", error);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

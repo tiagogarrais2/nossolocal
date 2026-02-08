@@ -371,6 +371,7 @@ export default function CarrinhoPage() {
             storeId: store.id,
             items: items.map((item) => ({
               productId: item.product.id,
+              productName: item.product.name,
               quantity: item.quantity,
               price: item.product.price,
             })),
@@ -550,8 +551,8 @@ export default function CarrinhoPage() {
 
                     <div className="space-y-4">
                       {items.map((item) => (
-                        <div key={item.id} className="flex gap-4 border-b pb-4">
-                          <div className="flex-1">
+                        <div key={item.id} className="border-b pb-4">
+                          <div className="mb-3">
                             <Link href={`/products/${item.product.id}`}>
                               <p className="font-semibold text-blue-600 hover:text-blue-800">
                                 {item.product.name}
@@ -562,7 +563,7 @@ export default function CarrinhoPage() {
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-4">
+                          <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-3">
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() =>
@@ -608,8 +609,11 @@ export default function CarrinhoPage() {
                               </button>
                             </div>
 
-                            <div className="w-24 text-right">
-                              <p className="font-semibold">
+                            <div className="flex items-center justify-between md:w-auto">
+                              <span className="md:hidden text-sm text-gray-600 mr-2">
+                                Subtotal:
+                              </span>
+                              <p className="font-semibold min-w-fit">
                                 {formatPrice(
                                   item.product.price * item.quantity,
                                 )}
@@ -619,7 +623,7 @@ export default function CarrinhoPage() {
                             <button
                               onClick={() => removeFromCart(item.id)}
                               disabled={updating}
-                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+                              className="w-full md:w-auto px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 text-sm md:text-base"
                             >
                               Remover
                             </button>

@@ -96,7 +96,7 @@ export default function SalesLogsPage() {
   const handleDeleteLog = async (logId) => {
     if (
       !confirm(
-        "Tem certeza que deseja excluir este log de venda? Esta ação não pode ser desfeita.",
+        "Tem certeza que deseja excluir esta venda e seu log de registro? Esta ação não pode ser desfeita e deletará tanto a venda quanto o histórico.",
       )
     ) {
       return;
@@ -104,22 +104,25 @@ export default function SalesLogsPage() {
 
     setDeleting(true);
     try {
-      const response = await fetch(`/api/admin/sales-logs?id=${logId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/sales-logs?id=${logId}&deleteOrder=true`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Erro ao deletar log");
+        throw new Error(error.error || "Erro ao deletar venda e log");
       }
 
       // Fechar modal e recarregar lista
       setSelectedLog(null);
       await fetchLogs();
-      alert("Log de venda deletado com sucesso!");
+      alert("Venda e log deletados com sucesso!");
     } catch (err) {
-      console.error("Erro ao deletar log:", err);
-      alert(`Erro ao deletar log: ${err.message}`);
+      console.error("Erro ao deletar venda e log:", err);
+      alert(`Erro ao deletar venda e log: ${err.message}`);
     } finally {
       setDeleting(false);
     }
@@ -637,17 +640,26 @@ export default function SalesLogsPage() {
                     Itens do Pedido
                   </h3>
                   <div className="space-y-2">
-                    {(Array.isArray(selectedLog.items)
-                      ? selectedLog.items
-                      : []
-                    ).map((item, index) => (
+                    {(() => {
+                      let items = selectedLog.items || [];
+                      // Se items for string JSON, fazer parse
+                      if (typeof items === "string") {
+                        try {
+                          items = JSON.parse(items);
+                        } catch (e) {
+                          console.error("Erro ao fazer parse dos items:", e);
+                          items = [];
+                        }
+                      }
+                      return Array.isArray(items) ? items : [];
+                    })().map((item, index) => (
                       <div
                         key={index}
                         className="flex justify-between items-center text-sm bg-white p-2 rounded"
                       >
                         <div>
                           <span className="font-medium">
-                            {item.productName}
+                            {item.productName || "Produto não especificado"}
                           </span>
                           <span className="text-gray-500 ml-2">
                             x{item.quantity}
@@ -772,12 +784,13 @@ export default function SalesLogsPage() {
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                           />
                         </svg>
-                        <span>Excluir Venda</span>
+                        <span>Excluir Venda e Log</span>
                       </>
                     )}
                   </button>
                   <p className="text-xs text-gray-500 text-center mt-2">
-                    ⚠️ Atenção: Esta ação é permanente e não pode ser desfeita
+                    ⚠️ Atenção: Esta ação é permanente, vai deletar a venda e o
+                    log, e não pode ser desfeita
                   </p>
                 </div>
               </div>
