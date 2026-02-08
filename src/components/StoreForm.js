@@ -764,7 +764,8 @@ export default function StoreForm({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             WhatsApp / Telefone *
             <span className="block text-xs text-gray-500 font-normal mt-1">
-              Este número será usado como link clicável para mensagens direcionadas em várias partes do site
+              Este número será usado como link clicável para mensagens
+              direcionadas em várias partes do site
             </span>
           </label>
           <IMaskInput
