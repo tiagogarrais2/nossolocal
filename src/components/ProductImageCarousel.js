@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 export default function ProductImageCarousel({
   images,
@@ -50,9 +51,11 @@ export default function ProductImageCarousel({
         className={`w-full bg-gray-200 flex items-center justify-center ${className}`}
       >
         {images && images.length > 0 ? (
-          <img
-            src={images[0]}
+          <Image
+            src={images[0] || "/no-image.png"}
             alt={productName}
+            width={400}
+            height={400}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -86,10 +89,12 @@ export default function ProductImageCarousel({
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {images.map((image, index) => (
-          <img
+          <Image
             key={index}
-            src={image}
+            src={image || "/no-image.png"}
             alt={`${productName} - Imagem ${index + 1}`}
+            width={400}
+            height={400}
             className="w-full h-full object-cover flex-shrink-0"
           />
         ))}

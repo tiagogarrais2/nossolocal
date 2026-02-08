@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import ProductImageCarousel from "../../../components/ProductImageCarousel";
@@ -345,13 +346,13 @@ export default function LojaPage() {
           <div className="flex flex-col items-center">
             <div className="flex-1 text-center">
               <div className="flex items-center justify-center space-x-4 mb-4">
-                {store.image && (
-                  <img
-                    src={store.image}
-                    alt={`Logo da ${store.name}`}
-                    className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                  />
-                )}
+                <Image
+                  src={store.image || "/no-image.png"}
+                  alt={`Logo da ${store.name}`}
+                  width={64}
+                  height={64}
+                  className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                />
                 <h1 className="text-3xl font-bold text-gray-900">
                   {store.name}
                 </h1>
@@ -673,13 +674,15 @@ export default function LojaPage() {
                   key={product.id}
                   className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
-                  <div className="aspect-w-1 aspect-h-1 bg-gray-200 group">
-                    <ProductImageCarousel
-                      images={product.images}
-                      productName={product.name}
-                      className="w-full"
-                    />
-                  </div>
+                  <Link href={`/products/${product.id}`} className="block">
+                    <div className="aspect-w-1 aspect-h-1 bg-gray-200 group hover:opacity-80 transition-opacity">
+                      <ProductImageCarousel
+                        images={product.images}
+                        productName={product.name}
+                        className="w-full"
+                      />
+                    </div>
+                  </Link>
                   <div className="p-4">
                     <Link href={`/products/${product.id}`}>
                       <h3 className="text-lg font-medium text-gray-900 mb-1 hover:text-blue-600 cursor-pointer">

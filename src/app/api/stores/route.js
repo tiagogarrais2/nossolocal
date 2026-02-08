@@ -101,8 +101,9 @@ export async function GET(request) {
     return NextResponse.json({ stores: storesWithOwnership });
   } catch (error) {
     console.error("Erro ao buscar lojas:", error);
+    console.error("Stack trace:", error.stack);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno do servidor", details: error.message },
       { status: 500 },
     );
   }

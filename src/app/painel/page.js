@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { IMaskInput } from "react-imask";
@@ -967,13 +968,13 @@ function ProfileContent() {
                       {/* Header: Imagem + Info + Botão Editar */}
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
                         <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
-                          {store.image && (
-                            <img
-                              src={store.image}
-                              alt={`Imagem da loja ${store.name}`}
-                              className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
-                            />
-                          )}
+                          <Image
+                            src={store.image || "/no-image.png"}
+                            alt={`Imagem da loja ${store.name}`}
+                            width={64}
+                            height={64}
+                            className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0"
+                          />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                               <Link

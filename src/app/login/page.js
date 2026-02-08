@@ -4,6 +4,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getPreviousPath, clearPreviousPath } from "@/hooks/usePreviousPath";
 import Footer from "../../components/Footer";
 
 function LoginForm() {
@@ -12,29 +13,51 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("/");
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Obter callbackUrl: primeiro dos searchParams, senão tenta usar a página anterior
+  // Marcar quando o componente está hidratado no cliente
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Obter callbackUrl: prioridade
+  // 1. localStorage (página anterior)
+  // 2. searchParams (callbackUrl na URL)
+  // 3. "/" como fallback
+  useEffect(() => {
+    if (!isMounted) return; // Aguardar hidratação
+
+    console.log("[LoginForm] Determinando redirectUrl...");
+
+    // Tentar recuperar da página anterior guardada em localStorage
+    const previousPath = getPreviousPath();
+    if (previousPath !== "/") {
+      console.log("[LoginForm] Usando previousPath:", previousPath);
+      setCallbackUrl(previousPath);
+      clearPreviousPath();
+      return;
+    }
+
+    // Se não houver página anterior, tentar searchParams
     const paramUrl = searchParams.get("callbackUrl");
     if (paramUrl) {
+      console.log("[LoginForm] Usando callbackUrl param:", paramUrl);
       setCallbackUrl(paramUrl);
-    } else if (typeof window !== "undefined" && document.referrer) {
-      // Se não houver callbackUrl, usar a página anterior (document.referrer)
-      const referrer = new URL(document.referrer);
-      const currentOrigin = new URL(window.location.href).origin;
-      // Apenas usar referrer se for do mesmo site
-      if (referrer.origin === currentOrigin) {
-        setCallbackUrl(referrer.pathname + referrer.search);
-      }
+      return;
     }
-  }, [searchParams]);
+
+    // Fallback para homepage
+    console.log("[LoginForm] Usando fallback: /");
+    setCallbackUrl("/");
+  }, [isMounted, searchParams]);
 
   // Redirecionar se já estiver logado
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && callbackUrl) {
+      console.log("[LoginForm] Redirecionando para:", callbackUrl);
       router.push(callbackUrl);
     }
-  }, [status, router, callbackUrl]);
+  }, [status, callbackUrl, router]);
 
   if (status === "loading") {
     return (

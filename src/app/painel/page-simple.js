@@ -1131,7 +1131,18 @@ export default function Profile() {
               <h5 className="font-semibold mb-4">Contato</h5>
               <ul className="space-y-2 text-gray-400">
                 <li>📧 contato@tiagodelivery.com</li>
-                <li>📞 (11) 9999-9999</li>
+                <li>
+                  <a
+                    href="https://wa.me/5511999999999"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-green-400 hover:text-green-300 hover:underline"
+                  >
+                    <span>💬</span>
+                    <span className="text-xs">(WhatsApp)</span>
+                    (11) 9999-9999
+                  </a>
+                </li>
                 <li>📍 São Paulo, SP</li>
               </ul>
             </div>

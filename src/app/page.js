@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -84,10 +85,14 @@ export default function Home() {
     const loadStores = async () => {
       try {
         const response = await fetch("/api/stores");
+        if (!response.ok) {
+          throw new Error(`Erro na API: ${response.status}`);
+        }
         const data = await response.json();
-        setStores(data.stores);
+        setStores(data.stores || []);
       } catch (error) {
         console.error("Erro ao carregar lojas:", error);
+        setStores([]);
       }
     };
 
@@ -221,29 +226,41 @@ export default function Home() {
             Lojas Disponíveis na Plataforma
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stores.map((store) => (
-              <div
-                key={store.id}
-                className="bg-gray-50 p-6 rounded-lg shadow-md min-h-80 flex flex-col items-center text-center"
-              >
-                {store.image && (
-                  <img
-                    src={store.image}
-                    alt={store.name}
-                    className="w-full aspect-square object-cover rounded-md mb-4"
-                  />
-                )}
-                <Link
-                  href={`/lojas/${store.slug}`}
-                  className="text-xl font-semibold text-blue-600 hover:text-blue-800"
+            {stores && stores.length > 0 ? (
+              stores.map((store) => (
+                <div
+                  key={store.id}
+                  className="bg-gray-50 p-6 rounded-lg shadow-md min-h-80 flex flex-col items-center text-center"
                 >
-                  {store.name}
-                </Link>
-                <p className="text-gray-600 mt-2">
-                  {store.city}, {stateSiglas[store.state] || store.state}
+                  <Link href={`/lojas/${store.slug}`} className="w-full block">
+                    <div className="w-full aspect-square hover:opacity-80 transition-opacity rounded-md overflow-hidden mb-4">
+                      <Image
+                        src={store.image || "/no-image.png"}
+                        alt={store.name}
+                        width={400}
+                        height={400}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </Link>
+                  <Link
+                    href={`/lojas/${store.slug}`}
+                    className="text-xl font-semibold text-blue-600 hover:text-blue-800"
+                  >
+                    {store.name}
+                  </Link>
+                  <p className="text-gray-600 mt-2">
+                    {store.city}, {stateSiglas[store.state] || store.state}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  Nenhuma loja disponível no momento
                 </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>

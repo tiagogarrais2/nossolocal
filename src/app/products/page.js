@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Header from "../../components/Header";
@@ -159,13 +160,13 @@ function ProductsPageContent() {
         {store && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-8">
             <div className="flex items-center space-x-4">
-              {store.image && (
-                <img
-                  src={store.image}
-                  alt={`Logo da ${store.name}`}
-                  className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                />
-              )}
+              <Image
+                src={store.image || "/no-image.png"}
+                alt={`Logo da ${store.name}`}
+                width={64}
+                height={64}
+                className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+              />
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   {store.name}

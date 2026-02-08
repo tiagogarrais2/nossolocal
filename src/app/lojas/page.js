@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Header from "../../components/Header";
@@ -143,20 +144,24 @@ function LojasContent() {
                   !store.isOpen ? "opacity-75" : ""
                 }`}
               >
-                {store.image && (
-                  <div className="aspect-square">
-                    <img
-                      src={store.image}
+                <Link href={`/lojas/${store.slug}`} className="block">
+                  <div className="aspect-square hover:opacity-80 transition-opacity">
+                    <Image
+                      src={store.image || "/no-image.png"}
                       alt={`Imagem da loja ${store.name}`}
+                      width={400}
+                      height={400}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                )}
+                </Link>
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {store.name}
-                    </h3>
+                    <Link href={`/lojas/${store.slug}`}>
+                      <h3 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
+                        {store.name}
+                      </h3>
+                    </Link>
                     {!store.isOpen && (
                       <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                         Delivery fechado
@@ -184,16 +189,36 @@ function LojasContent() {
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <div className="flex items-start">
                       <span className="mr-2">📍</span>
-                      <span>
-                        {store.street}, {store.number}
-                        {store.neighborhood && ` - ${store.neighborhood}`}
-                      </span>
+                      {store.latitude && store.longitude ? (
+                        <a
+                          href={`https://www.google.com/maps/search/${store.latitude},${store.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 hover:underline"
+                        >
+                          {store.street}, {store.number}
+                          {store.neighborhood && ` - ${store.neighborhood}`}
+                        </a>
+                      ) : (
+                        <span>
+                          {store.street}, {store.number}
+                          {store.neighborhood && ` - ${store.neighborhood}`}
+                        </span>
+                      )}
                     </div>
 
                     {store.phone && (
-                      <div className="flex items-center">
-                        <span className="mr-2">📞</span>
-                        <span>{store.phone}</span>
+                      <div className="flex items-center gap-1">
+                        <a
+                          href={`https://wa.me/${store.phone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:underline"
+                        >
+                          <span>💬</span>
+                          <span className="text-xs">(WhatsApp)</span>
+                          {store.phone}
+                        </a>
                       </div>
                     )}
 
@@ -219,17 +244,6 @@ function LojasContent() {
                         </div>
                       )}
                   </div>
-
-                  <Link
-                    href={`/lojas/${store.slug}`}
-                    className={`block w-full text-center px-4 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg ${
-                      store.isOpen
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                        : "bg-orange-500 text-white hover:bg-orange-600"
-                    }`}
-                  >
-                    {store.isOpen ? "Ver Loja" : "Ver Produtos"}
-                  </Link>
                 </div>
               </div>
             ))}

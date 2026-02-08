@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary";
 
 export default function ProductForm({
@@ -188,9 +189,11 @@ export default function ProductForm({
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {formData.images.map((img, index) => (
                   <div key={index} className="relative">
-                    <img
-                      src={img}
+                    <Image
+                      src={img || "/no-image.png"}
                       alt={`Imagem ${index + 1}`}
+                      width={200}
+                      height={200}
                       className="w-full h-full object-cover rounded-lg"
                     />
                     <button
