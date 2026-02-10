@@ -17,7 +17,7 @@ export default function ParaLojistasPage() {
           <div className="text-center">
             <TypeWriterHero />
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Nos so Local é um shopping virtual para o comércio local. Gerencie
+              Nosso Local é um shopping virtual para o comércio local. Gerencie
               sua loja online e oferça delivery aos seus clientes - totalmente
               grátis!
             </p>
