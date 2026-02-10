@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import TypeWriterHero from "../../components/TypeWriterHero";
 
 export default function ParaLojistasPage() {
   return (
@@ -14,9 +15,7 @@ export default function ParaLojistasPage() {
       <section className="bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Leve sua loja para o digital
-            </h1>
+            <TypeWriterHero />
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Nos so Local é um shopping virtual para o comércio local. Gerencie
               sua loja online e oferça delivery aos seus clientes - totalmente
