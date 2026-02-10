@@ -69,29 +69,59 @@ export default function Header() {
         {/* Menu inferior */}
         <div className="flex justify-center items-center pb-4">
           {session ? (
-            <div className="flex flex-col items-center space-y-1">
-              <div className="flex items-center space-x-3">
-                <span className="text-gray-700 text-sm">
-                  Olá, {getDisplayName()}
-                </span>
+            <div className="flex flex-col items-center space-y-3 w-full">
+              {/* Saudação com Sair */}
+              <div className="flex items-center justify-center gap-6">
+                <p className="text-gray-800 font-semibold text-base">
+                  Olá, {getDisplayName()} 👋
+                </p>
+
                 <button
                   onClick={() => signOut()}
-                  className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                  className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium text-sm transition-colors"
                 >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
                   Sair
                 </button>
               </div>
+
+              {/* Botão Meu Painel */}
               <Link
                 href="/painel"
-                className="text-blue-600 hover:text-blue-800 text-sm"
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
               >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
                 Meu Painel
               </Link>
             </div>
           ) : (
             <Link
               href={getLoginLink()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors"
             >
               Entrar
             </Link>

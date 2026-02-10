@@ -140,9 +140,7 @@ function LojasContent() {
             {stores.map((store) => (
               <div
                 key={store.id}
-                className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden ${
-                  !store.isOpen ? "opacity-75" : ""
-                }`}
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden"
               >
                 <Link href={`/lojas/${store.slug}`} className="block">
                   <div className="aspect-square hover:opacity-80 transition-opacity">
@@ -156,17 +154,12 @@ function LojasContent() {
                   </div>
                 </Link>
                 <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2">
                     <Link href={`/lojas/${store.slug}`}>
                       <h3 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
                         {store.name}
                       </h3>
                     </Link>
-                    {!store.isOpen && (
-                      <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                        Delivery fechado
-                      </span>
-                    )}
                   </div>
 
                   {store.description && (
@@ -175,37 +168,28 @@ function LojasContent() {
                     </p>
                   )}
 
-                  {!store.isOpen && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                      <div className="flex items-center">
-                        <span className="text-yellow-600 mr-2">⏰</span>
-                        <span className="text-yellow-800 text-sm font-medium">
-                          A loja está fechada neste momento.
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <div className="flex items-start">
-                      <span className="mr-2">📍</span>
-                      {store.latitude && store.longitude ? (
+                      <span className="mr-2">�️</span>
+                      <span>
+                        {store.street}, {store.number}
+                        {store.neighborhood && ` - ${store.neighborhood}`}
+                      </span>
+                    </div>
+
+                    {store.latitude && store.longitude && (
+                      <div className="flex items-center">
+                        <span className="mr-2">📍</span>
                         <a
                           href={`https://www.google.com/maps/search/${store.latitude},${store.longitude}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-700 hover:underline"
                         >
-                          {store.street}, {store.number}
-                          {store.neighborhood && ` - ${store.neighborhood}`}
+                          Obter direções (Google Maps)
                         </a>
-                      ) : (
-                        <span>
-                          {store.street}, {store.number}
-                          {store.neighborhood && ` - ${store.neighborhood}`}
-                        </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {store.phone && (
                       <div className="flex items-center gap-1">

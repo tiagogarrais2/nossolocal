@@ -368,7 +368,8 @@ export default function StoreForm({
         {/* Nome da Loja */}
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Nome da Loja *
+            Nome da Loja * - É assim que sua loja aparecerá para os clientes.
+            Você pode atualizar este nome a qualquer momento.
           </label>
           <input
             type="text"
@@ -383,7 +384,8 @@ export default function StoreForm({
         {/* Slug da Loja */}
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Identificação Única da Loja *
+            Identificação Única da Loja * - Esta identificação será usada no
+            link da sua loja e não pode ser alterada depois.
           </label>
           {initialData && slug ? (
             // Mostrar link da loja quando estiver editando
@@ -732,10 +734,10 @@ export default function StoreForm({
           </p>
         </div>
 
-        {/* Categoria */}
+        {/* Tipo de loja */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Categoria (CNAE) *
+            Tipo de loja *
           </label>
           <CategoryAutocomplete
             value={category}
@@ -762,7 +764,7 @@ export default function StoreForm({
         {/* Telefone */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            WhatsApp / Telefone *
+            Telefone / WhatsApp *
             <span className="block text-xs text-gray-500 font-normal mt-1">
               Este número será usado como link clicável para mensagens
               direcionadas em várias partes do site
@@ -781,7 +783,10 @@ export default function StoreForm({
         {/* Email */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email *
+            Email da loja *
+            <p className="text-xs text-gray-500 mt-1">
+              Os pedidos chegarão neste e-mail.
+            </p>
           </label>
           <input
             type="email"
@@ -813,6 +818,9 @@ export default function StoreForm({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Taxa de Entrega (R$)
+            <p className="text-xs text-gray-500 mt-1">
+              Válido apenas para a cidade da loja.
+            </p>
           </label>
           <input
             type="number"
@@ -847,6 +855,9 @@ export default function StoreForm({
         <h4 className="text-lg font-medium text-gray-900 mb-4">
           Endereço da Loja
         </h4>
+        <p className="text-xs text-gray-500 mt-1">
+          Usado para quando os clientes buscam o pedido na loja.
+        </p>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* CEP */}
@@ -987,7 +998,8 @@ export default function StoreForm({
                 Coordenadas Geográficas (Opcional)
               </h5>
               <p className="text-xs text-gray-500 mt-1">
-                Capture automaticamente ou insira manualmente
+                Usado para direcionar os visitantes do site para a sua loja.
+                Capture automaticamente ou insira manualmente.
               </p>
             </div>
             <LocationCapture

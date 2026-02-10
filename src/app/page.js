@@ -219,6 +219,59 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Seção Para Lojistas */}
+      <section className="py-16 bg-gradient-to-r from-green-50 to-blue-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-lg p-8 md:p-12 border-2 border-green-200">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              {/* Conteúdo */}
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  Você é Lojista?
+                </h2>
+                <p className="text-lg text-gray-600 mb-6">
+                  Leve sua loja para o digital! Gerencie seus produtos, receba
+                  pedidos e ofereça delivery aos seus clientes - totalmente
+                  grátis.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center text-gray-700">
+                    <span className="text-green-600 mr-3 text-xl">✓</span>
+                    Cadastre sua loja em minutos
+                  </li>
+                  <li className="flex items-center text-gray-700">
+                    <span className="text-green-600 mr-3 text-xl">✓</span>
+                    Gerencie produtos e estoque facilmente
+                  </li>
+                  <li className="flex items-center text-gray-700">
+                    <span className="text-green-600 mr-3 text-xl">✓</span>
+                    Receba pedidos e configure delivery
+                  </li>
+                  <li className="flex items-center text-gray-700">
+                    <span className="text-green-600 mr-3 text-xl">✓</span>
+                    Nenhuma taxa ou mensalidade
+                  </li>
+                </ul>
+                <Link
+                  href="/para-lojistas"
+                  className="inline-block bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                >
+                  Saiba Mais →
+                </Link>
+              </div>
+
+              {/* Ícone */}
+              <div className="text-center">
+                <div className="text-9xl mb-4">🏪</div>
+                <p className="text-gray-600 font-medium">
+                  Junte-se a nossos lojistas
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Lista de Lojas Ativas */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

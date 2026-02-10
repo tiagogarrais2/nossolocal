@@ -12,7 +12,7 @@ O site está hospedado em: **https://nossolocal.com.br**
 
 - **Lojas Agrupadas por Localização**: As lojas são organizadas e agrupadas por cidade
 - **Busca Local**: Os clientes encontram facilmente estabelecimentos próximos
-- **Entrega Regional**: Foco em delivery eficiente dentro da mesma região
+- **Entrega Regional**: A loja virtual tem foco em delivery dentro da mesma cidade
 
 ### Processo de Compra
 
@@ -52,26 +52,21 @@ Pelo menos neste início, não estamos cobrando taxas ou mensalidades. Você pod
 
 ### 1. Cadastro da Loja
 
-1. Acesse https://nossolocal.com.br
-2. Clique em "Cadastrar Loja"
+1. Acesse https://nossolocal.com.br, cadastre-se ou faça login.
+2. Clique em "Meu Painel" > "Minhas lojas" > "Cadastrar Nova Loja"
 3. Preencha as informações solicitadas
 
-### 2. Configuração Inicial
+### 2. Adicione Seus Produtos
 
-1. Configure suas chaves PIX para receber pagamentos
-2. Configure taxas de entrega e pedidos mínimos
-3. Mantenha seu delivery aberto ou fechado
-
-### 3. Adicione Seus Produtos
-
-1. Acesse o painel da loja
-2. Vá para "Produtos" > "Novo Produto"
-3. Adicione fotos, descrições e preços
-4. Configure a disponibilidade
+1. Vá para "Meu Painel" > "Minhas lojas" > "Gerenciar Produtos".
+2. Clique em adicionar novos produtos, edite ou remova existentes.
+3. Adicione fotos, descrições e preços.
+4. Informe a disponibilidade
+5. Você pode indicar o estoque ou deixar as vendas sem estoque definido.
 
 ## 📞 Suporte
 
-Em caso de dúvidas ou problemas técnicos, entre em contato conosco.
+Em caso de dúvidas ou problemas técnicos, entre em contato conosco (88) 99723-086
 
 ## 📋 Termos de Uso
 
