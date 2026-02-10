@@ -70,17 +70,35 @@ function FlyerContent() {
         </div>
         <div className="bg-green-50 rounded px-3 py-2 border-l-4 border-green-600">
           <p className="text-2xl font-black text-green-600">💰 Zero Taxas</p>
-          <p className="text-sm text-gray-700">Receba tudo via PIX direto</p>
+          <p className="text-sm text-gray-700">
+            Receba tudo no seu PIX ou maquininhas
+          </p>
         </div>
         <div className="bg-blue-50 rounded px-3 py-2 border-l-4 border-blue-600">
           <p className="text-2xl font-black text-blue-600">📱 Total Controle</p>
-          <p className="text-sm text-gray-700">Gerencia tudo no seu celular</p>
+          <p className="text-sm text-gray-700">
+            Gerencie tudo no seu celular/computador
+          </p>
         </div>
         <div className="bg-green-50 rounded px-3 py-2 border-l-4 border-green-600">
           <p className="text-2xl font-black text-green-600">
             🎯 Clientes Locais
           </p>
           <p className="text-sm text-gray-700">Apareça pra quem está perto</p>
+        </div>
+        <div className="bg-blue-50 rounded px-3 py-2 border-l-4 border-blue-600">
+          <p className="text-2xl font-black text-blue-600">
+            📊 Vitrine Digital
+          </p>
+          <p className="text-sm text-gray-700">
+            Cadastre ofertas que atraem clientes
+          </p>
+        </div>
+        <div className="bg-green-50 rounded px-3 py-2 border-l-4 border-green-600">
+          <p className="text-2xl font-black text-green-600">⚡ Simplicidade!</p>
+          <p className="text-sm text-gray-700">
+            Cadastre sua loja e venda hoje mesmo
+          </p>
         </div>
       </div>
 
