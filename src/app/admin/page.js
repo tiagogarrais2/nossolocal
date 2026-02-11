@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import { formatPrice } from "../../lib/utils";
+import { formatPrice, getStateDisplay } from "../../lib/utils";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -773,7 +773,7 @@ export default function AdminPage() {
                         {store.category}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {store.city}/{store.state}
+                        {store.city}/{getStateDisplay(store.state)}
                       </td>
                       <td className="px-4 py-3">
                         <span

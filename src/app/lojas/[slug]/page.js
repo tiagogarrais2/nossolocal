@@ -328,10 +328,10 @@ export default function LojaPage() {
                   </a>{" "}
                   ou{" "}
                   <a
-                    href="mailto:tiagoarraisholanda@gmail.com?subject=Reivindicar%20página%20da%20loja"
+                    href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL}?subject=Reivindicar%20página%20da%20loja`}
                     className="font-semibold underline hover:text-amber-900"
                   >
-                    tiagoarraisholanda@gmail.com
+                    {process.env.NEXT_PUBLIC_CONTACT_EMAIL}
                   </a>
                 </p>
               </div>
@@ -351,7 +351,7 @@ export default function LojaPage() {
                   alt={`Logo da ${store.name}`}
                   width={64}
                   height={64}
-                  className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                  className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white"
                 />
                 <h1 className="text-3xl font-bold text-gray-900">
                   {store.name}

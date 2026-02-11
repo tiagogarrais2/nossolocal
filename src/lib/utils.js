@@ -16,8 +16,6 @@ export const formatPrice = (price) => {
  * @returns {string} Sigla do estado
  */
 export const getStateDisplay = (state) => {
-  if (typeof state === "string") return state;
-
   const stateCodeToUF = {
     11: "RO",
     12: "AC",
@@ -48,5 +46,20 @@ export const getStateDisplay = (state) => {
     53: "DF",
   };
 
-  return stateCodeToUF[state] || state;
+  // Se é string numérica, converter para número
+  const numericState = Number(state);
+  if (!isNaN(numericState) && numericState > 0) {
+    return stateCodeToUF[numericState] || state;
+  }
+
+  // Se é string de 2 caracteres e apenas letras, retornar em maiúsculas
+  if (
+    typeof state === "string" &&
+    state.length === 2 &&
+    /^[a-zA-Z]+$/.test(state)
+  ) {
+    return state.toUpperCase();
+  }
+
+  return state;
 };
