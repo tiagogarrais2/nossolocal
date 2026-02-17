@@ -44,6 +44,11 @@ export default function StoreForm({
   const [zipCodeLoading, setZipCodeLoading] = useState(false);
   const [slugChecking, setSlugChecking] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState(null);
+  
+  // Estados para taxas de entrega por bairro
+  const [availableNeighborhoods, setAvailableNeighborhoods] = useState([]);
+  const [neighborhoodDeliveryFees, setNeighborhoodDeliveryFees] = useState({});
+  const [showNeighborhoodFeesForm, setShowNeighborhoodFeesForm] = useState(false);
 
   // Estados para seleção de proprietário
   const [ownerId, setOwnerId] = useState(""); // ID do proprietário selecionado
@@ -147,6 +152,7 @@ export default function StoreForm({
       setMinimumOrder(initialData.minimumOrder || "");
       setDeliveryFee(initialData.deliveryFee || "");
       setFreeShippingThreshold(initialData.freeShippingThreshold || "");
+      setNeighborhoodDeliveryFees(initialData.neighborhoodDeliveryFees || {});
       setZipCode(initialData.address?.zipCode || "");
       setStreet(initialData.address?.street || "");
       setNumber(initialData.address?.number || "");
@@ -183,6 +189,42 @@ export default function StoreForm({
       }
     };
   }, [uploadTimeout]);
+
+  // Carregar bairros quando a cidade mudar
+  useEffect(() => {
+    const loadNeighborhoods = async () => {
+      if (!city) {
+        setAvailableNeighborhoods([]);
+        return;
+      }
+
+      try {
+        const response = await fetch("/estados-cidades2.json");
+        const data = await response.json();
+        
+        // Encontrar o ID da cidade
+        const foundCity = data.cities?.find(
+          (c) => c.name.toLowerCase() === city.toLowerCase() && c.state_id.toString() === state
+        );
+        
+        if (foundCity) {
+          // Filtrar bairros dessa cidade
+          const neighborhoods = data.neighborhoods?.filter(
+            (n) => n.city_id === foundCity.id
+          ) || [];
+          
+          setAvailableNeighborhoods(neighborhoods.map(n => n.name).sort());
+        } else {
+          setAvailableNeighborhoods([]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar bairros:", error);
+        setAvailableNeighborhoods([]);
+      }
+    };
+
+    loadNeighborhoods();
+  }, [city, state]);
 
   const handleZipCodeChange = async (value) => {
     setZipCode(value);
@@ -237,6 +279,7 @@ export default function StoreForm({
       freeShippingThreshold: freeShippingThreshold
         ? parseFloat(freeShippingThreshold)
         : null,
+      neighborhoodDeliveryFees: Object.keys(neighborhoodDeliveryFees).length > 0 ? neighborhoodDeliveryFees : null,
       address: {
         zipCode,
         street,
@@ -848,6 +891,75 @@ export default function StoreForm({
             placeholder="0.00"
           />
         </div>
+
+        {/* Taxa de Entrega por Bairro */}
+        {availableNeighborhoods.length > 0 && (
+          <div className="border-t border-gray-200 pt-6 mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Taxa de Entrega por Bairro (Opcional)
+                <p className="text-xs text-gray-500 mt-1">
+                  Se configurada, será usada esta taxa específica para cada bairro. Se não configurada, a loja não entregará nesse bairro.
+                </p>
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowNeighborhoodFeesForm(!showNeighborhoodFeesForm)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                {showNeighborhoodFeesForm ? "Ocultar" : "Configurar"}
+              </button>
+            </div>
+
+            {showNeighborhoodFeesForm && (
+              <div className="bg-gray-50 p-4 rounded-lg space-y-3 mb-4">
+                {availableNeighborhoods.map((neighborhood) => (
+                  <div key={neighborhood} className="flex items-center gap-3">
+                    <label className="flex-1 text-sm text-gray-700">
+                      {neighborhood}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600">R$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={neighborhoodDeliveryFees[neighborhood] || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            const { [neighborhood]: _, ...rest } = neighborhoodDeliveryFees;
+                            setNeighborhoodDeliveryFees(rest);
+                          } else {
+                            setNeighborhoodDeliveryFees({
+                              ...neighborhoodDeliveryFees,
+                              [neighborhood]: parseFloat(value),
+                            });
+                          }
+                        }}
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {Object.keys(neighborhoodDeliveryFees).length > 0 && (
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-900 font-medium mb-2">Bairros configurados:</p>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(neighborhoodDeliveryFees).map(([hood, fee]) => (
+                    <span key={hood} className="bg-blue-200 text-blue-900 px-3 py-1 rounded-full text-xs">
+                      {hood}: R$ {fee.toFixed(2)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Endereço da Loja */}

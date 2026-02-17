@@ -141,6 +141,7 @@ model Store {
   minimumOrder    Float? // Valor mínimo de compras
   deliveryFee     Float? // Taxa de entrega
   freeShippingThreshold Float? // Valor mínimo para frete grátis
+  neighborhoodDeliveryFees Json? // Taxas de entrega por bairro: { "bairro_name": 5.00 }
 
   isOpen      Boolean @default(true) // Se a loja está aberta para pedidos
 
