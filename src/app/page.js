@@ -292,7 +292,7 @@ export default function Home() {
                         alt={store.name}
                         width={400}
                         height={400}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain bg-white"
                       />
                     </div>
                   </Link>
