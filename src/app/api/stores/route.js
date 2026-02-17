@@ -35,7 +35,12 @@ export async function GET(request) {
       }
     }
 
-    console.log("GET /api/stores - currentUserId:", currentUserId, "session email:", session?.user?.email);
+    console.log(
+      "GET /api/stores - currentUserId:",
+      currentUserId,
+      "session email:",
+      session?.user?.email,
+    );
 
     // Se foi passado um slug, buscar apenas essa loja
     if (slug) {

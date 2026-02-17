@@ -25,6 +25,7 @@ export default function LojaPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [togglingStore, setTogglingStore] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Mapeamento de códigos numéricos para siglas de UF
   const stateCodeToUF = {
@@ -158,6 +159,25 @@ export default function LojaPage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Verificar se o usuário é administrador
+  useEffect(() => {
+    const checkPermissions = async () => {
+      try {
+        const response = await fetch("/api/users/permissions");
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdmin(data.isAdmin || false);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar permissões:", error);
+      }
+    };
+
+    if (session) {
+      checkPermissions();
+    }
+  }, [session]);
 
   const addToCart = async (product) => {
     // Verificar se o usuário está logado
@@ -344,7 +364,7 @@ export default function LojaPage() {
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col items-center">
-            <div className="flex-1 text-center">
+            <div className="flex-1 text-center w-full">
               <div className="flex items-center justify-center space-x-4 mb-4">
                 <Image
                   src={store.image || "/no-image.png"}
@@ -353,9 +373,32 @@ export default function LojaPage() {
                   height={64}
                   className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white"
                 />
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {store.name}
-                </h1>
+                <div className="flex items-center space-x-3">
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {store.name}
+                  </h1>
+                  {isAdmin && (
+                    <button
+                      onClick={() => router.push(`/store?id=${store.id}`)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Editar loja"
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
               {store.description && (
                 <p className="text-gray-600 mt-2">{store.description}</p>

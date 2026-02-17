@@ -24,6 +24,7 @@ export default function AddressForm({
   const [longitude, setLongitude] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
   const [zipCodeLoading, setZipCodeLoading] = useState(false);
+  const [availableNeighborhoods, setAvailableNeighborhoods] = useState([]);
 
   // Ref para controlar requisições simultâneas
   const isFetchingRef = useRef(false);
@@ -52,6 +53,43 @@ export default function AddressForm({
       setIsPrimary(initialData.isPrimary || false);
     }
   }, [initialData]);
+
+  // Carregar bairros quando a cidade mudar
+  useEffect(() => {
+    const loadNeighborhoods = async () => {
+      if (!city) {
+        setAvailableNeighborhoods([]);
+        return;
+      }
+
+      try {
+        const response = await fetch("/estados-cidades2.json");
+        const data = await response.json();
+
+        // Encontrar o ID da cidade
+        const foundCity = data.cities?.find(
+          (c) =>
+            c.name.toLowerCase() === city.toLowerCase() &&
+            c.state_id.toString() === state,
+        );
+
+        if (foundCity) {
+          // Filtrar bairros dessa cidade
+          const neighborhoods =
+            data.neighborhoods?.filter((n) => n.city_id === foundCity.id) || [];
+
+          setAvailableNeighborhoods(neighborhoods.map((n) => n.name).sort());
+        } else {
+          setAvailableNeighborhoods([]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar bairros:", error);
+        setAvailableNeighborhoods([]);
+      }
+    };
+
+    loadNeighborhoods();
+  }, [city, state]);
 
   // Mapeamento de UF para código de estado
   const ufToStateCode = {
@@ -235,15 +273,25 @@ export default function AddressForm({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Bairro *
           </label>
-          <input
-            key="neighborhood-input"
-            type="text"
-            value={neighborhood}
-            onChange={(e) => setNeighborhood(e.target.value)}
-            required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Centro"
-          />
+          {availableNeighborhoods.length > 0 ? (
+            <select
+              value={neighborhood}
+              onChange={(e) => setNeighborhood(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Selecione um bairro</option>
+              {availableNeighborhoods.map((hood) => (
+                <option key={hood} value={hood}>
+                  {hood}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">
+              Selecione uma cidade primeiro
+            </div>
+          )}
         </div>
 
         {/* Estado */}

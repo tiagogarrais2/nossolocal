@@ -44,11 +44,12 @@ export default function StoreForm({
   const [zipCodeLoading, setZipCodeLoading] = useState(false);
   const [slugChecking, setSlugChecking] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState(null);
-  
+
   // Estados para taxas de entrega por bairro
   const [availableNeighborhoods, setAvailableNeighborhoods] = useState([]);
   const [neighborhoodDeliveryFees, setNeighborhoodDeliveryFees] = useState({});
-  const [showNeighborhoodFeesForm, setShowNeighborhoodFeesForm] = useState(false);
+  const [showNeighborhoodFeesForm, setShowNeighborhoodFeesForm] =
+    useState(false);
 
   // Estados para seleção de proprietário
   const [ownerId, setOwnerId] = useState(""); // ID do proprietário selecionado
@@ -201,19 +202,20 @@ export default function StoreForm({
       try {
         const response = await fetch("/estados-cidades2.json");
         const data = await response.json();
-        
+
         // Encontrar o ID da cidade
         const foundCity = data.cities?.find(
-          (c) => c.name.toLowerCase() === city.toLowerCase() && c.state_id.toString() === state
+          (c) =>
+            c.name.toLowerCase() === city.toLowerCase() &&
+            c.state_id.toString() === state,
         );
-        
+
         if (foundCity) {
           // Filtrar bairros dessa cidade
-          const neighborhoods = data.neighborhoods?.filter(
-            (n) => n.city_id === foundCity.id
-          ) || [];
-          
-          setAvailableNeighborhoods(neighborhoods.map(n => n.name).sort());
+          const neighborhoods =
+            data.neighborhoods?.filter((n) => n.city_id === foundCity.id) || [];
+
+          setAvailableNeighborhoods(neighborhoods.map((n) => n.name).sort());
         } else {
           setAvailableNeighborhoods([]);
         }
@@ -279,7 +281,10 @@ export default function StoreForm({
       freeShippingThreshold: freeShippingThreshold
         ? parseFloat(freeShippingThreshold)
         : null,
-      neighborhoodDeliveryFees: Object.keys(neighborhoodDeliveryFees).length > 0 ? neighborhoodDeliveryFees : null,
+      neighborhoodDeliveryFees:
+        Object.keys(neighborhoodDeliveryFees).length > 0
+          ? neighborhoodDeliveryFees
+          : null,
       address: {
         zipCode,
         street,
@@ -899,12 +904,15 @@ export default function StoreForm({
               <label className="block text-sm font-medium text-gray-700">
                 Taxa de Entrega por Bairro (Opcional)
                 <p className="text-xs text-gray-500 mt-1">
-                  Se configurada, será usada esta taxa específica para cada bairro. Se não configurada, a loja não entregará nesse bairro.
+                  Se configurada, será usada esta taxa específica para cada
+                  bairro. Se não configurada, a loja não entregará nesse bairro.
                 </p>
               </label>
               <button
                 type="button"
-                onClick={() => setShowNeighborhoodFeesForm(!showNeighborhoodFeesForm)}
+                onClick={() =>
+                  setShowNeighborhoodFeesForm(!showNeighborhoodFeesForm)
+                }
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
               >
                 {showNeighborhoodFeesForm ? "Ocultar" : "Configurar"}
@@ -928,7 +936,8 @@ export default function StoreForm({
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "") {
-                            const { [neighborhood]: _, ...rest } = neighborhoodDeliveryFees;
+                            const { [neighborhood]: _, ...rest } =
+                              neighborhoodDeliveryFees;
                             setNeighborhoodDeliveryFees(rest);
                           } else {
                             setNeighborhoodDeliveryFees({
@@ -948,13 +957,20 @@ export default function StoreForm({
 
             {Object.keys(neighborhoodDeliveryFees).length > 0 && (
               <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-sm text-blue-900 font-medium mb-2">Bairros configurados:</p>
+                <p className="text-sm text-blue-900 font-medium mb-2">
+                  Bairros configurados:
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(neighborhoodDeliveryFees).map(([hood, fee]) => (
-                    <span key={hood} className="bg-blue-200 text-blue-900 px-3 py-1 rounded-full text-xs">
-                      {hood}: R$ {fee.toFixed(2)}
-                    </span>
-                  ))}
+                  {Object.entries(neighborhoodDeliveryFees).map(
+                    ([hood, fee]) => (
+                      <span
+                        key={hood}
+                        className="bg-blue-200 text-blue-900 px-3 py-1 rounded-full text-xs"
+                      >
+                        {hood}: R$ {fee.toFixed(2)}
+                      </span>
+                    ),
+                  )}
                 </div>
               </div>
             )}
@@ -1043,14 +1059,25 @@ export default function StoreForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Bairro *
             </label>
-            <input
-              type="text"
-              value={neighborhood}
-              onChange={(e) => setNeighborhood(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Centro"
-            />
+            {availableNeighborhoods.length > 0 ? (
+              <select
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Selecione um bairro</option>
+                {availableNeighborhoods.map((hood) => (
+                  <option key={hood} value={hood}>
+                    {hood}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">
+                Selecione uma cidade primeiro
+              </div>
+            )}
           </div>
 
           {/* Estado */}
