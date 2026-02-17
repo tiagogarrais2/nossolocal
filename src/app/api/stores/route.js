@@ -19,16 +19,23 @@ export async function GET(request) {
 
     // Buscar ID do usuário se estiver logado
     let currentUserId = null;
-    if (session && session.user && !session.user.id && session.user.email) {
-      const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-      });
-      if (user) {
-        currentUserId = user.id;
+    if (session && session.user) {
+      // Tentativa 1: Usar session.user.id se já estiver lá
+      if (session.user.id) {
+        currentUserId = session.user.id;
       }
-    } else if (session?.user?.id) {
-      currentUserId = session.user.id;
+      // Tentativa 2: Buscar no banco pelo email
+      else if (session.user.email) {
+        const user = await prisma.user.findUnique({
+          where: { email: session.user.email },
+        });
+        if (user) {
+          currentUserId = user.id;
+        }
+      }
     }
+
+    console.log("GET /api/stores - currentUserId:", currentUserId, "session email:", session?.user?.email);
 
     // Se foi passado um slug, buscar apenas essa loja
     if (slug) {
