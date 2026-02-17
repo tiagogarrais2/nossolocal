@@ -58,7 +58,7 @@ function AddressFormContent() {
       };
       fetchAddress();
     }
-  }, [addressId, session]);
+  }, [addressId]);
 
   const handleAddressSubmit = async (formData) => {
     setLoading(true);

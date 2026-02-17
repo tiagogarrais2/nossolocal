@@ -131,7 +131,7 @@ function StorePageContent() {
     if (session) {
       fetchStore();
     }
-  }, [storeId, session]);
+  }, [storeId]);
 
   // Funções de validação
   const validateCPF = (cpf) => {
@@ -263,7 +263,7 @@ function StorePageContent() {
     if (session && storeId) {
       fetchPixKeys();
     }
-  }, [storeId, session]);
+  }, [storeId]);
 
   const handleStoreSubmit = async (formData) => {
     setLoading(true);

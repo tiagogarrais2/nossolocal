@@ -46,7 +46,7 @@ function EditProductPageContent() {
     if (session) {
       fetchStore();
     }
-  }, [storeId, session]);
+  }, [storeId]);
 
   // Buscar dados do produto
   useEffect(() => {
@@ -84,7 +84,7 @@ function EditProductPageContent() {
     if (session) {
       fetchProduct();
     }
-  }, [storeId, productId, session]);
+  }, [storeId, productId]);
 
   const handleSubmit = async (formData) => {
     setLoading(true);
