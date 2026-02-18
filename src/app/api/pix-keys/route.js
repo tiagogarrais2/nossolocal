@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { canManageStore } from "@/lib/permissions";
 
 // Função para validar CPF
 function validateCPF(cpf) {
@@ -198,12 +199,19 @@ export async function POST(request) {
       );
     }
 
-    // Verificar se a loja pertence ao usuário
+    // Verificar se o usuário tem permissão para gerenciar a loja
     const store = await prisma.store.findUnique({
       where: { id: storeId },
     });
 
-    if (!store || store.userId !== session.user.id) {
+    if (!store) {
+      return NextResponse.json(
+        { error: "Loja não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    if (!canManageStore(session, store)) {
       return NextResponse.json(
         { error: "Loja não encontrada ou sem permissão" },
         { status: 403 }
