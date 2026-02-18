@@ -227,6 +227,41 @@ public/
 - `npm run prisma:migrate` - Cria migrações em desenvolvimento
 - `npm run prisma:deploy` - Aplica migrações em produção
 - `npm run db:reset` - Reset completo do banco remoto (cuidado!)
+- `npm run update-version` - Atualiza versão e cache buster do service worker
+
+## Atualização de Versão e Cache Buster
+
+Para atualizar a versão da aplicação e invalidar o service worker em produção, use o script automático:
+
+```bash
+npm run update-version patch   # Incrementa patch (1.0.0 → 1.0.1)
+npm run update-version minor   # Incrementa minor (1.0.0 → 1.1.0)
+npm run update-version major   # Incrementa major (1.0.0 → 2.0.0)
+```
+
+### O que o script faz:
+
+1. Atualiza a versão semântica no `package.json`
+2. Incrementa o cache buster do service worker (`v9` → `v10`)
+3. Atualiza todos os nomes de cache no `public/service-worker.js`:
+   - `nosso-local-vX`
+   - `static-vX`
+   - `dynamic-vX`
+4. Cria um commit automático com mensagem: `chore: bump version to X.Y.Z (sw-vN)`
+5. Após executar, apenas faça `git push` para sincronizar
+
+### Exemplo:
+
+```bash
+$ npm run update-version patch
+
+✅ Versão atualizada: 1.0.0 → 1.0.1
+✅ Cache version atualizada: v9 → v10
+✅ Service worker atualizado
+✅ Commit criado automaticamente
+
+💡 Não esqueça de fazer: git push
+```
 
 ## Funcionalidades Implementadas
 
