@@ -151,6 +151,7 @@ export async function POST(request) {
       minimumOrder,
       deliveryFee,
       freeShippingThreshold,
+      neighborhoodDeliveryFees,
       address,
       ownerId, // ID do proprietário (quando gerente/admin cria para outro usuário)
     } = body;
@@ -289,6 +290,7 @@ export async function POST(request) {
         minimumOrder: minimumOrder || null,
         deliveryFee: deliveryFee || null,
         freeShippingThreshold: freeShippingThreshold || null,
+        neighborhoodDeliveryFees: neighborhoodDeliveryFees || null,
         street: address.street.trim(),
         number: address.number.trim(),
         complement: address.complement?.trim() || null,
@@ -375,6 +377,7 @@ export async function PUT(request) {
       minimumOrder,
       deliveryFee,
       freeShippingThreshold,
+      neighborhoodDeliveryFees,
       address,
       ownerId, // Novo proprietário (apenas ADMIN pode alterar)
     } = body;
@@ -512,6 +515,7 @@ export async function PUT(request) {
       minimumOrder: minimumOrder || null,
       deliveryFee: deliveryFee || null,
       freeShippingThreshold: freeShippingThreshold || null,
+      neighborhoodDeliveryFees: neighborhoodDeliveryFees || null,
       street: address.street.trim(),
       number: address.number.trim(),
       complement: address.complement?.trim() || null,

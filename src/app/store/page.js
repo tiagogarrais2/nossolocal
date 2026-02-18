@@ -102,6 +102,7 @@ function StorePageContent() {
               minimumOrder: store.minimumOrder || "",
               deliveryFee: store.deliveryFee || "",
               freeShippingThreshold: store.freeShippingThreshold || "",
+              neighborhoodDeliveryFees: store.neighborhoodDeliveryFees || {},
               userId: store.userId,
               owner: store.owner, // Dados do proprietário
               address: {

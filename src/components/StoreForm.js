@@ -1214,9 +1214,14 @@ export default function StoreForm({
                 ))}
               </select>
             ) : (
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">
-                Selecione uma cidade primeiro
-              </div>
+              <input
+                type="text"
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Digite o bairro manualmente"
+              />
             )}
           </div>
 
