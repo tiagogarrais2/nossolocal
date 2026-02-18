@@ -598,13 +598,15 @@ export default function StoreForm({
           {image && (
             <div className="mb-4">
               <div className="relative inline-block">
-                <Image
-                  src={image || "/no-image.png"}
-                  alt="Pré-visualização da imagem da loja"
-                  width={192}
-                  height={192}
-                  className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
-                />
+                <div className="w-48 aspect-square rounded-md overflow-hidden border-2 border-gray-200 shadow-md bg-gray-50">
+                  <Image
+                    src={image || "/no-image.png"}
+                    alt="Pré-visualização da imagem da loja"
+                    width={192}
+                    height={192}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => setImage("")}
