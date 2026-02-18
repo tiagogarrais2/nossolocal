@@ -110,7 +110,7 @@ export async function GET(request) {
     if (!storeId) {
       return NextResponse.json(
         { error: "ID da loja é obrigatório" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -124,7 +124,7 @@ export async function GET(request) {
     console.error("Erro ao buscar chaves PIX:", error);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -154,7 +154,7 @@ export async function POST(request) {
     if (!storeId || !type || !key) {
       return NextResponse.json(
         { error: "Dados obrigatórios faltando" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -174,7 +174,7 @@ export async function POST(request) {
         {
           error: "Telefone inválido. Use formato com DDD: (11) 99999-9999",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -184,7 +184,7 @@ export async function POST(request) {
         {
           error: "E-mail inválido",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -195,7 +195,7 @@ export async function POST(request) {
           error:
             "Chave aleatória inválida. Deve ser um UUID (ex: 12345678-1234-1234-1234-123456789012)",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -207,14 +207,14 @@ export async function POST(request) {
     if (!store) {
       return NextResponse.json(
         { error: "Loja não encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (!canManageStore(session, store)) {
       return NextResponse.json(
         { error: "Loja não encontrada ou sem permissão" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -241,7 +241,7 @@ export async function POST(request) {
     console.error("Erro ao criar chave PIX:", error);
     return NextResponse.json(
       { error: "Erro interno do servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
