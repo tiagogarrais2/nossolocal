@@ -52,6 +52,7 @@ export default function StoreForm({
     useState(false);
   const [neighborhoodDeliveryEnabled, setNeighborhoodDeliveryEnabled] =
     useState({});
+  const [deliveryType, setDeliveryType] = useState("flat"); // "flat" ou "neighborhood"
 
   // Estados para seleção de proprietário
   const [ownerId, setOwnerId] = useState(""); // ID do proprietário selecionado
@@ -156,6 +157,16 @@ export default function StoreForm({
       setDeliveryFee(initialData.deliveryFee || "");
       setFreeShippingThreshold(initialData.freeShippingThreshold || "");
       setNeighborhoodDeliveryFees(initialData.neighborhoodDeliveryFees || {});
+
+      // Determinar tipo de taxa de entrega configurado
+      if (
+        initialData.neighborhoodDeliveryFees &&
+        Object.keys(initialData.neighborhoodDeliveryFees).length > 0
+      ) {
+        setDeliveryType("neighborhood");
+      } else {
+        setDeliveryType("flat");
+      }
 
       // Inicializar quais bairros têm entrega habilitada
       if (initialData.neighborhoodDeliveryFees) {
@@ -281,6 +292,21 @@ export default function StoreForm({
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Preparar dados de taxa de entrega baseado no tipo selecionado
+    let finalDeliveryFee = null;
+    let finalNeighborhoodDeliveryFees = null;
+
+    if (deliveryType === 'flat') {
+      finalDeliveryFee = deliveryFee ? parseFloat(deliveryFee) : null;
+      finalNeighborhoodDeliveryFees = null;
+    } else if (deliveryType === 'neighborhood') {
+      finalDeliveryFee = null;
+      finalNeighborhoodDeliveryFees =
+        Object.keys(neighborhoodDeliveryFees).length > 0
+          ? neighborhoodDeliveryFees
+          : null;
+    }
+
     const formData = {
       name,
       slug,
@@ -291,14 +317,11 @@ export default function StoreForm({
       phone,
       email,
       minimumOrder: minimumOrder ? parseFloat(minimumOrder) : null,
-      deliveryFee: deliveryFee ? parseFloat(deliveryFee) : null,
+      deliveryFee: finalDeliveryFee,
       freeShippingThreshold: freeShippingThreshold
         ? parseFloat(freeShippingThreshold)
         : null,
-      neighborhoodDeliveryFees:
-        Object.keys(neighborhoodDeliveryFees).length > 0
-          ? neighborhoodDeliveryFees
-          : null,
+      neighborhoodDeliveryFees: finalNeighborhoodDeliveryFees,
       address: {
         zipCode,
         street,
@@ -859,179 +882,238 @@ export default function StoreForm({
             required
           />
         </div>
+      </div>
 
-        {/* Valor Mínimo de Compras */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Valor Mínimo de Compras (R$)
-          </label>
-          <input
-            type="number"
-            step="1"
-            min="0"
-            value={minimumOrder}
-            onChange={(e) => setMinimumOrder(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="0.00"
-          />
-        </div>
+      {/* Configurações da Loja Virtual */}
+      <div className="border-t border-gray-200 pt-6">
+        <h4 className="text-lg font-medium text-gray-900 mb-4">
+          Configurações da Loja Virtual
+        </h4>
 
-        {/* Taxa de Entrega */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Taxa de Entrega (R$)
-            <p className="text-xs text-gray-500 mt-1">
-              Válido apenas para a cidade da loja.
-            </p>
-          </label>
-          <input
-            type="number"
-            step="1"
-            min="0"
-            value={deliveryFee}
-            onChange={(e) => setDeliveryFee(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="0.00"
-          />
-        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Valor Mínimo de Compras */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Valor Mínimo de Compras (R$)
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={minimumOrder}
+              onChange={(e) => setMinimumOrder(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="0.00"
+            />
+          </div>
 
-        {/* Valor Mínimo para Frete Grátis */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Valor Mínimo para Frete Grátis (R$)
-          </label>
-          <input
-            type="number"
-            step="1"
-            min="0"
-            value={freeShippingThreshold}
-            onChange={(e) => setFreeShippingThreshold(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="0.00"
-          />
-        </div>
+          {/* Valor Mínimo para Frete Grátis */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Valor Mínimo para Frete Grátis (R$)
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={freeShippingThreshold}
+              onChange={(e) => setFreeShippingThreshold(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="0.00"
+            />
+          </div>
 
-        {/* Taxa de Entrega por Bairro */}
-        {availableNeighborhoods.length > 0 && (
-          <div className="border-t border-gray-200 pt-6 mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Taxa de Entrega por Bairro (Opcional)
-                <p className="text-xs text-gray-500 mt-1">
-                  Marque os bairros onde sua loja entrega e defina a taxa (0 =
-                  Grátis). Apenas bairros marcados estarão disponíveis para os
-                  clientes.
-                </p>
-              </label>
-              <button
-                type="button"
-                onClick={() =>
-                  setShowNeighborhoodFeesForm(!showNeighborhoodFeesForm)
-                }
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-              >
-                {showNeighborhoodFeesForm ? "Ocultar" : "Configurar"}
-              </button>
-            </div>
-
-            {showNeighborhoodFeesForm && (
-              <div className="bg-gray-50 p-4 rounded-lg space-y-3 mb-4">
-                {availableNeighborhoods.map((neighborhood) => (
-                  <div key={neighborhood} className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id={`delivery-${neighborhood}`}
-                        checked={
-                          neighborhoodDeliveryEnabled[neighborhood] || false
-                        }
-                        onChange={(e) => {
-                          const isChecked = e.target.checked;
-                          setNeighborhoodDeliveryEnabled({
-                            ...neighborhoodDeliveryEnabled,
-                            [neighborhood]: isChecked,
-                          });
-
-                          if (!isChecked) {
-                            // Remover do objeto de taxas se desmarcado
-                            const { [neighborhood]: _, ...rest } =
-                              neighborhoodDeliveryFees;
-                            setNeighborhoodDeliveryFees(rest);
-                          } else {
-                            // Inicializar com taxa 0 se marcado
-                            if (!(neighborhood in neighborhoodDeliveryFees)) {
-                              setNeighborhoodDeliveryFees({
-                                ...neighborhoodDeliveryFees,
-                                [neighborhood]: 0,
-                              });
-                            }
-                          }
-                        }}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <label
-                        htmlFor={`delivery-${neighborhood}`}
-                        className="flex-1 text-sm text-gray-700 cursor-pointer font-medium"
-                      >
-                        {neighborhood}
-                      </label>
-                    </div>
-
-                    {neighborhoodDeliveryEnabled[neighborhood] && (
-                      <div className="ml-7 flex items-center gap-2">
-                        <span className="text-sm text-gray-600">
-                          Taxa de Entrega:
-                        </span>
-                        <span className="text-gray-600">R$</span>
-                        <input
-                          type="number"
-                          step="1"
-                          min="0"
-                          value={neighborhoodDeliveryFees[neighborhood] || 0}
-                          onChange={(e) => {
-                            setNeighborhoodDeliveryFees({
-                              ...neighborhoodDeliveryFees,
-                              [neighborhood]: parseFloat(e.target.value) || 0,
-                            });
-                          }}
-                          className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="0.00"
-                        />
-                        {neighborhoodDeliveryFees[neighborhood] === 0 && (
-                          <span className="text-sm text-green-600 font-medium">
-                            (Grátis)
-                          </span>
-                        )}
-                      </div>
-                    )}
+          {/* Seleção de Tipo de Taxa de Entrega */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-4">
+              Como deseja configurar a taxa de entrega?
+            </label>
+            <div className="space-y-4">
+              {/* Opção 1: Taxa Única */}
+              <div className="border-2 rounded-lg p-4" style={{borderColor: deliveryType === 'flat' ? '#3b82f6' : '#d1d5db'}}>
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    id="delivery-flat"
+                    name="deliveryType"
+                    value="flat"
+                    checked={deliveryType === 'flat'}
+                    onChange={(e) => setDeliveryType(e.target.value)}
+                    className="mt-1 w-4 h-4 text-blue-600 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor="delivery-flat"
+                      className="text-sm font-medium text-gray-900 cursor-pointer block"
+                    >
+                      Taxa Única
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Uma taxa de entrega padrão para toda a cidade
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
 
-            {Object.keys(neighborhoodDeliveryFees).length > 0 && (
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-sm text-blue-900 font-medium mb-2">
-                  Bairros com entrega:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(neighborhoodDeliveryFees).map(
-                    ([hood, fee]) => (
-                      <span
-                        key={hood}
-                        className="bg-blue-200 text-blue-900 px-3 py-1 rounded-full text-xs font-medium"
+                {deliveryType === 'flat' && (
+                  <div className="mt-4 ml-7 pt-4 border-t border-gray-200">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Taxa de Entrega (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={deliveryFee}
+                      onChange={(e) => setDeliveryFee(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Opção 2: Taxa por Bairro */}
+              {availableNeighborhoods.length > 0 && (
+                <div className="border-2 rounded-lg p-4" style={{borderColor: deliveryType === 'neighborhood' ? '#3b82f6' : '#d1d5db'}}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      id="delivery-neighborhood"
+                      name="deliveryType"
+                      value="neighborhood"
+                      checked={deliveryType === 'neighborhood'}
+                      onChange={(e) => setDeliveryType(e.target.value)}
+                      className="mt-1 w-4 h-4 text-blue-600 cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <label
+                        htmlFor="delivery-neighborhood"
+                        className="text-sm font-medium text-gray-900 cursor-pointer block"
                       >
-                        {fee === 0
-                          ? `${hood}: Grátis`
-                          : `${hood}: R$ ${fee.toFixed(2)}`}
-                      </span>
-                    ),
+                        Taxa por Bairro (Opcional)
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Defina taxas diferentes para cada bairro. Deixe em branco (0)
+                        para entrega grátis.
+                      </p>
+                    </div>
+                  </div>
+
+                  {deliveryType === 'neighborhood' && (
+                    <div className="mt-4 ml-7 pt-4 border-t border-gray-200 space-y-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowNeighborhoodFeesForm(!showNeighborhoodFeesForm)
+                        }
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      >
+                        {showNeighborhoodFeesForm ? "Ocultar Bairros" : "Configurar Bairros"}
+                      </button>
+
+                      {showNeighborhoodFeesForm && (
+                        <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                          {availableNeighborhoods.map((neighborhood) => (
+                            <div key={neighborhood} className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="checkbox"
+                                  id={`delivery-${neighborhood}`}
+                                  checked={
+                                    neighborhoodDeliveryEnabled[neighborhood] || false
+                                  }
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    setNeighborhoodDeliveryEnabled({
+                                      ...neighborhoodDeliveryEnabled,
+                                      [neighborhood]: isChecked,
+                                    });
+
+                                    if (!isChecked) {
+                                      // Remover do objeto de taxas se desmarcado
+                                      const { [neighborhood]: _, ...rest } =
+                                        neighborhoodDeliveryFees;
+                                      setNeighborhoodDeliveryFees(rest);
+                                    } else {
+                                      // Inicializar com taxa 0 se marcado
+                                      if (!(neighborhood in neighborhoodDeliveryFees)) {
+                                        setNeighborhoodDeliveryFees({
+                                          ...neighborhoodDeliveryFees,
+                                          [neighborhood]: 0,
+                                        });
+                                      }
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                />
+                                <label
+                                  htmlFor={`delivery-${neighborhood}`}
+                                  className="flex-1 text-sm text-gray-700 cursor-pointer font-medium"
+                                >
+                                  {neighborhood}
+                                </label>
+                              </div>
+
+                              {neighborhoodDeliveryEnabled[neighborhood] && (
+                                <div className="ml-7 flex items-center gap-2">
+                                  <span className="text-sm text-gray-600">
+                                    Taxa de Entrega:
+                                  </span>
+                                  <span className="text-gray-600">R$</span>
+                                  <input
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    value={neighborhoodDeliveryFees[neighborhood] || 0}
+                                    onChange={(e) => {
+                                      setNeighborhoodDeliveryFees({
+                                        ...neighborhoodDeliveryFees,
+                                        [neighborhood]: parseFloat(e.target.value) || 0,
+                                      });
+                                    }}
+                                    className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="0.00"
+                                  />
+                                  {neighborhoodDeliveryFees[neighborhood] === 0 && (
+                                    <span className="text-sm text-green-600 font-medium">
+                                      (Grátis)
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {Object.keys(neighborhoodDeliveryFees).length > 0 && (
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm text-blue-900 font-medium mb-2">
+                            Bairros com entrega:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(neighborhoodDeliveryFees).map(
+                              ([hood, fee]) => (
+                                <span
+                                  key={hood}
+                                  className="bg-blue-200 text-blue-900 px-3 py-1 rounded-full text-xs font-medium"
+                                >
+                                  {fee === 0
+                                    ? `${hood}: Grátis`
+                                    : `${hood}: R$ ${fee.toFixed(2)}`}
+                                </span>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Endereço da Loja */}
