@@ -194,7 +194,7 @@ function LojasContent() {
                     {store.phone && (
                       <div className="flex items-center gap-1">
                         <a
-                          href={`https://wa.me/${store.phone.replace(/\D/g, "")}`}
+                          href={`https://wa.me/55${store.phone.replace(/\D/g, "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:underline"
