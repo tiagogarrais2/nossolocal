@@ -244,6 +244,19 @@ export default function CarrinhoPage() {
     return subtotal + deliveryFee;
   };
 
+  // Verifica se um bairro é atendido pela loja (considerando taxa por bairro ou taxa única)
+  const isNeighborhoodDeliverable = (store, neighborhood) => {
+    if (!neighborhood) return false;
+
+    // Se a loja tem taxa por bairro, o bairro deve estar na lista
+    if (store.neighborhoodDeliveryFees) {
+      return neighborhood in store.neighborhoodDeliveryFees;
+    }
+
+    // Se não tem taxa por bairro, qualquer bairro na cidade é válido (taxa única)
+    return true;
+  };
+
   // Filtrar endereços que pertencem à cidade da loja
   const getValidAddressesForStore = (store, addresses) => {
     if (!store || !store.city || !addresses) {
@@ -255,7 +268,12 @@ export default function CarrinhoPage() {
     );
   };
 
-  const calculateDeliveryFee = (subtotal, store, isPickup = false) => {
+  const calculateDeliveryFee = (
+    subtotal,
+    store,
+    isPickup = false,
+    selectedAddress = null,
+  ) => {
     // Se for retirada na loja, não cobra taxa de entrega
     if (isPickup) {
       return 0;
@@ -268,6 +286,20 @@ export default function CarrinhoPage() {
     ) {
       return 0;
     }
+
+    // Verificar se a loja tem taxa de entrega por bairro
+    if (
+      store.neighborhoodDeliveryFees &&
+      selectedAddress &&
+      selectedAddress.neighborhood
+    ) {
+      const neighborhoodFee =
+        store.neighborhoodDeliveryFees[selectedAddress.neighborhood];
+      if (neighborhoodFee !== undefined) {
+        return neighborhoodFee;
+      }
+    }
+
     // Caso contrário, retorna a taxa de entrega padrão
     return store.deliveryFee || 0;
   };
@@ -305,6 +337,14 @@ export default function CarrinhoPage() {
         ]);
         return;
       }
+
+      // Validar se o bairro é atendido pela loja
+      if (!isNeighborhoodDeliverable(store, selectedAddress.neighborhood)) {
+        setErrors([
+          `A loja ${store.name} não faz entrega no bairro ${selectedAddress.neighborhood}. Por favor, retirar na loja ou selecione outro endereço.`,
+        ]);
+        return;
+      }
     }
 
     if (paymentMethod === "cash" && needsChange && changeAmount) {
@@ -323,6 +363,7 @@ export default function CarrinhoPage() {
         subtotal,
         store,
         deliveryType === "pickup",
+        selectedAddress,
       );
       const total = subtotal + deliveryFee;
 
@@ -361,6 +402,7 @@ export default function CarrinhoPage() {
           subtotal,
           store,
           deliveryType === "pickup",
+          selectedAddress,
         );
         const total = subtotal + deliveryFee;
 
@@ -535,6 +577,7 @@ export default function CarrinhoPage() {
               storeSubtotal,
               store,
               deliveryType === "pickup",
+              selectedAddress,
             );
             const storeTotal = calculateStoreTotal(items, storeDeliveryFee);
 
@@ -731,60 +774,70 @@ export default function CarrinhoPage() {
                           <h4 className="font-semibold text-sm text-blue-900">
                             Informações para Retirada
                           </h4>
-                          {store.address && (
-                            <div className="flex items-start">
-                              <svg
-                                className="w-4 h-4 mr-2 mt-0.5 text-blue-600 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                              </svg>
-                              <div>
-                                <p className="text-sm text-blue-900">
-                                  {store.address}
-                                  {store.number && ` nº ${store.number}`}
-                                  {store.complement && ` - ${store.complement}`}
+                          {/* Bloco de Endereço */}
+                          <div className="flex items-start">
+                            <svg
+                              className="w-4 h-4 mr-2 mt-0.5 text-blue-600 flex-shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            <div>
+                              <p className="text-sm font-medium text-blue-900 mb-1">
+                                Endereço
+                              </p>
+                              <p className="text-sm text-blue-900">
+                                {store.street}
+                                {store.number && `, nº ${store.number}`}
+                                {store.complement && ` - ${store.complement}`}
+                              </p>
+                              {(store.city || store.neighborhood) && (
+                                <p className="text-xs text-blue-800 mt-1">
+                                  {store.neighborhood &&
+                                    `${store.neighborhood}, `}
+                                  {store.city}
+                                  {store.state &&
+                                    ` - ${stateCodeToUF[store.state]}`}
                                 </p>
-                                {store.city && (
-                                  <p className="text-xs text-blue-800">
-                                    {store.city}
-                                    {store.state && `, ${store.state}`}
-                                  </p>
-                                )}
-                              </div>
+                              )}
+                              {store.zipCode && (
+                                <p className="text-xs text-blue-800">
+                                  {store.zipCode}
+                                </p>
+                              )}
                             </div>
-                          )}
+                          </div>
+                          {/* Bloco de Telefone com WhatsApp */}
                           {store.phone && (
                             <div className="flex items-start">
                               <svg
                                 className="w-4 h-4 mr-2 mt-0.5 text-blue-600 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
+                                fill="currentColor"
                                 viewBox="0 0 24 24"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M3 5a2 2 0 012-2h3.28a1 1 0 00.948.684l1.498 4.493a1 1 0 00.502.756l2.048 1.029a1 1 0 001.047-1.6l-2.048-1.029a1 1 0 00-.756-.502L9.474 3.32a1 1 0 00-.684-.948H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-3.28a1 1 0 00-.948.684l-1.498-4.493a1 1 0 00-.502-.756L7.952 2.32a1 1 0 00-1.047 1.6l2.048 1.029a1 1 0 00.756.502l1.498 4.493a1 1 0 00.684.948H19a2 2 0 002 2H5a2 2 0 002-2V5z"
-                                />
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.272-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.24-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.952 1.27c-1.523.807-2.835 2.172-3.74 3.762 0 5.42 4.409 9.83 9.829 9.83a9.844 9.844 0 004.802-1.236c1.528-.806 2.839-2.173 3.743-3.762 0-5.42-4.409-9.83-9.829-9.83zm8.081-4.691l-3.697 1.851a1.378 1.378 0 00-1.066 1.29v.01c-.006.615.448 1.13 1.066 1.29l3.697 1.852c.321.163.671.163.992 0 .32-.163.53-.485.53-.82V4.41c0-.335-.21-.657-.53-.82z" />
                               </svg>
-                              <p className="text-sm text-blue-900">
+                              <a
+                                href={`https://wa.me/55${store.phone.replace(/\D/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                              >
                                 {store.phone}
-                              </p>
+                              </a>
                             </div>
                           )}
                           {store.latitude && store.longitude && (
@@ -858,27 +911,66 @@ export default function CarrinhoPage() {
                               </p>
                             </div>
                           ) : (
-                            <select
-                              value={selectedAddress?.id || ""}
-                              onChange={(e) => {
-                                const address = userAddresses.find(
-                                  (a) => a.id === e.target.value,
-                                );
-                                setSelectedAddress(address);
-                              }}
-                              className="w-full border rounded px-3 py-2 text-sm"
-                            >
-                              <option value="">Selecione um endereço</option>
-                              {getValidAddressesForStore(
-                                store,
-                                userAddresses,
-                              ).map((address) => (
-                                <option key={address.id} value={address.id}>
-                                  {address.street}, {address.number} -{" "}
-                                  {address.city}/{stateCodeToUF[address.state]}
-                                </option>
-                              ))}
-                            </select>
+                            <>
+                              <select
+                                value={selectedAddress?.id || ""}
+                                onChange={(e) => {
+                                  const address = userAddresses.find(
+                                    (a) => a.id === e.target.value,
+                                  );
+                                  setSelectedAddress(address);
+                                }}
+                                className="w-full border rounded px-3 py-2 text-sm"
+                              >
+                                <option value="">Selecione um endereço</option>
+                                {getValidAddressesForStore(
+                                  store,
+                                  userAddresses,
+                                ).map((address) => (
+                                  <option key={address.id} value={address.id}>
+                                    {address.street}, {address.number} -{" "}
+                                    {address.city}/
+                                    {stateCodeToUF[address.state]}
+                                  </option>
+                                ))}
+                              </select>
+
+                              {/* Aviso quando o bairro selecionado não é atendido */}
+                              {selectedAddress &&
+                                !isNeighborhoodDeliverable(
+                                  store,
+                                  selectedAddress.neighborhood,
+                                ) && (
+                                  <div className="bg-orange-50 border border-orange-300 rounded p-3 text-sm text-orange-800 mt-2">
+                                    <p className="font-semibold mb-2">
+                                      ⚠️ Bairro não atendido para entrega
+                                    </p>
+                                    <p className="mb-2">
+                                      Infelizmente a loja{" "}
+                                      <strong>{store.name}</strong> não faz
+                                      entrega no bairro{" "}
+                                      <strong>
+                                        {selectedAddress.neighborhood}
+                                      </strong>
+                                      .
+                                    </p>
+                                    <p className="text-xs mt-2">
+                                      💡 Dica: Você pode{" "}
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setDeliveryType("pickup")
+                                        }
+                                        className="underline font-semibold text-orange-900 hover:text-orange-700"
+                                      >
+                                        retirar o produto na loja
+                                      </button>
+                                      , ou cadastrar um endereço em outro bairro
+                                      atendido.
+                                    </p>
+                                  </div>
+                                )}
+                            </>
                           )}
                         </div>
                       )}
@@ -960,8 +1052,27 @@ export default function CarrinhoPage() {
 
                       <button
                         onClick={() => handleCreateOrder(storeId)}
-                        disabled={creatingOrder || !session?.user}
+                        disabled={
+                          creatingOrder ||
+                          !session?.user ||
+                          (deliveryType === "delivery" &&
+                            selectedAddress &&
+                            !isNeighborhoodDeliverable(
+                              store,
+                              selectedAddress.neighborhood,
+                            ))
+                        }
                         className="w-full bg-blue-600 text-white py-3 rounded font-semibold hover:bg-blue-700 disabled:bg-gray-400 mt-4"
+                        title={
+                          deliveryType === "delivery" &&
+                          selectedAddress &&
+                          !isNeighborhoodDeliverable(
+                            store,
+                            selectedAddress.neighborhood,
+                          )
+                            ? "Selecione outro endereço ou opte pela retirada na loja"
+                            : ""
+                        }
                       >
                         {creatingOrder ? "Processando..." : "Finalizar Compra"}
                       </button>

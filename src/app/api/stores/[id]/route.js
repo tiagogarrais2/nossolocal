@@ -39,6 +39,7 @@ export async function PUT(request, { params }) {
       minimumOrder,
       deliveryFee,
       freeShippingThreshold,
+      neighborhoodDeliveryFees,
       address,
     } = body;
 
@@ -154,6 +155,7 @@ export async function PUT(request, { params }) {
         minimumOrder: minimumOrder || null,
         deliveryFee: deliveryFee || null,
         freeShippingThreshold: freeShippingThreshold || null,
+        neighborhoodDeliveryFees: neighborhoodDeliveryFees || null,
         street: address.street.trim(),
         number: address.number.trim(),
         complement: address.complement?.trim() || null,
