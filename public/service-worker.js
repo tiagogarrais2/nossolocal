@@ -1,6 +1,6 @@
-const CACHE_NAME = "nosso-local-v11";
-const STATIC_CACHE = "static-v11";
-const DYNAMIC_CACHE = "dynamic-v11";
+const CACHE_NAME = "nosso-local-v12";
+const STATIC_CACHE = "static-v12";
+const DYNAMIC_CACHE = "dynamic-v12";
 
 const STATIC_FILES = [
   "/",
