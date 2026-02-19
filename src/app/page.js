@@ -6,7 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { isAdmin } from "../lib/permissions";
 
 const stateSiglas = {
   11: "RO",
@@ -126,25 +125,11 @@ export default function Home() {
     }
   }, [selectedState, states]);
 
-  const isUserAdmin = session && isAdmin(session.user?.email);
+  const isUserAdmin = session?.user?.isAdmin;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-
-      {/* Link para Admin (apenas se logado e for admin) */}
-      {isUserAdmin && (
-        <div className="bg-blue-900 text-white py-2 shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-end">
-            <Link
-              href="/admin"
-              className="text-sm font-medium hover:text-blue-200 transition-colors"
-            >
-              → Ir para o Painel Admin
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white">

@@ -7,6 +7,7 @@ import {
   sendVerificationRequest,
   sendNewUserNotificationToAdmins,
 } from "@/lib/email";
+import { isAdmin } from "@/lib/permissions";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -77,7 +78,10 @@ export const authOptions = {
                 }
               }
             } catch (settingError) {
-              console.error("Erro ao buscar configuração de admin:", settingError);
+              console.error(
+                "Erro ao buscar configuração de admin:",
+                settingError,
+              );
               // Continuar sem enviar e-mail
             }
 
@@ -117,13 +121,16 @@ export const authOptions = {
         console.log("SESSION CALLBACK CALLED");
         console.log("Session callback called with user:", user);
         console.log("Session callback called with session:", session);
-        
+
         // Adicionar ID do usuário à sessão
         if (user?.id) {
           session.user.id = user.id;
           console.log("Set session.user.id to:", user.id);
         }
-        
+
+        // Adicionar status de admin à sessão (verificado server-side)
+        session.user.isAdmin = isAdmin(session.user?.email);
+
         // Adicionar campos do perfil da tabela Usuario (não-crítico)
         try {
           if (session?.user?.id) {
@@ -147,7 +154,7 @@ export const authOptions = {
           // Continuar sem os dados extras do perfil
           // A sessão já tem user.id, que é o importante
         }
-        
+
         console.log("Session callback returning session:", session);
         return session;
       } catch (error) {
@@ -164,7 +171,7 @@ export const authOptions = {
             "JWT callback - user.id:",
             user.id,
             "type:",
-            typeof user.id
+            typeof user.id,
           );
           token.id = user.id;
         }
@@ -177,17 +184,17 @@ export const authOptions = {
     async redirect({ url, baseUrl }) {
       try {
         console.log("Redirect callback:", { url, baseUrl });
-        
+
         // Se a URL começa com o baseUrl ou é um caminho relativo, use-a
         if (url.startsWith(baseUrl)) {
           return url;
         }
-        
+
         // Se é um caminho relativo, retorne com baseUrl
         if (url.startsWith("/")) {
           return `${baseUrl}${url}`;
         }
-        
+
         // Caso contrário, redirecione para o painel
         return `${baseUrl}/painel`;
       } catch (error) {

@@ -1,7 +1,7 @@
 {
   "name": "nosso-local",
-  "version": "1.0.6",
-  "swVersion": 15,
+  "version": "1.0.7",
+  "swVersion": 16,
   "private": true,
   "scripts": {
     "dev": "prisma generate && next dev -p 3000",
