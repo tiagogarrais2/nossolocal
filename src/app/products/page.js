@@ -9,6 +9,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { formatPrice } from "../../lib/utils";
 import ProductImageCarousel from "../../components/ProductImageCarousel";
+import AssemblableProductModal from "../../components/AssemblableProductModal";
 
 function ProductsPageContent() {
   const { data: session, status } = useSession();
@@ -21,6 +22,7 @@ function ProductsPageContent() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState([]);
   const [addingToCart, setAddingToCart] = useState(null);
+  const [assembleProduct, setAssembleProduct] = useState(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -90,7 +92,7 @@ function ProductsPageContent() {
     }
   };
 
-  const addToCart = async (productId) => {
+  const addToCart = async (productId, customizationData = null) => {
     // Verificar se o usuário está logado
     if (!session) {
       router.push("/login");
@@ -99,16 +101,25 @@ function ProductsPageContent() {
 
     try {
       setAddingToCart(productId);
+      const body = customizationData
+        ? {
+            productId,
+            quantity: customizationData.quantity,
+            customizations: customizationData.customizations,
+            customizationHash: customizationData.customizationHash,
+          }
+        : { productId };
       const response = await fetch("/api/cart", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         setSuccessMessage("Produto adicionado ao carrinho!");
+        setAssembleProduct(null);
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         const errorData = await response.json();
@@ -291,9 +302,17 @@ function ProductsPageContent() {
                       </p>
                     )}
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-xl font-bold text-green-600">
-                        {formatPrice(parseFloat(product.price))}
-                      </span>
+                      <div>
+                        <span className="text-xl font-bold text-green-600">
+                          {product.isAssemblable ? "A partir de " : ""}
+                          {formatPrice(parseFloat(product.price))}
+                        </span>
+                        {product.isAssemblable && (
+                          <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                            Montável
+                          </span>
+                        )}
+                      </div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
                           product.available
@@ -326,7 +345,17 @@ function ProductsPageContent() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => addToCart(product.id)}
+                        onClick={() => {
+                          if (product.isAssemblable) {
+                            if (!session) {
+                              router.push("/login");
+                              return;
+                            }
+                            setAssembleProduct(product);
+                          } else {
+                            addToCart(product.id);
+                          }
+                        }}
                         disabled={
                           addingToCart === product.id || !product.available
                         }
@@ -359,6 +388,8 @@ function ProductsPageContent() {
                             </svg>
                             Adicionando...
                           </span>
+                        ) : product.isAssemblable ? (
+                          "🧩 Montar Produto"
                         ) : (
                           "🛒 Adicionar ao Carrinho"
                         )}
@@ -371,6 +402,15 @@ function ProductsPageContent() {
           )}
         </div>
       </main>
+
+      {/* Modal de produto montável */}
+      <AssemblableProductModal
+        product={assembleProduct}
+        isOpen={!!assembleProduct}
+        onClose={() => setAssembleProduct(null)}
+        onAddToCart={(data) => addToCart(data.productId, data)}
+        adding={!!addingToCart}
+      />
 
       <Footer />
     </div>

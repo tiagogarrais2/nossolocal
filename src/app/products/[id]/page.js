@@ -8,6 +8,7 @@ import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import { formatPrice, getStateDisplay } from "../../../lib/utils";
 import ProductImageCarousel from "../../../components/ProductImageCarousel";
+import AssemblableProductModal from "../../../components/AssemblableProductModal";
 
 export default function ProductPage() {
   const { data: session } = useSession();
@@ -21,6 +22,9 @@ export default function ProductPage() {
   const [error, setError] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showAssembleModal, setShowAssembleModal] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const [showFloatingCart, setShowFloatingCart] = useState(false);
 
   // Carregar dados do produto
   useEffect(() => {
@@ -61,8 +65,55 @@ export default function ProductPage() {
     fetchProductData();
   }, [productId]);
 
+  // Carregar contagem do carrinho
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      try {
+        const response = await fetch("/api/cart");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.cart && data.cart.items) {
+            const count = data.cart.items.reduce(
+              (total, item) => total + item.quantity,
+              0,
+            );
+            setCartItemCount(count);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar carrinho:", error);
+      }
+    };
+
+    fetchCartCount();
+  }, []);
+
+  // Detectar scroll para mostrar carrinho flutuante
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollTop =
+            window.pageYOffset ||
+            document.documentElement.scrollTop ||
+            document.body.scrollTop;
+          setShowFloatingCart(scrollTop > 200);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // Função para adicionar ao carrinho
-  const addToCart = async () => {
+  const addToCart = async (customizationData = null) => {
     if (!session) {
       router.push("/login");
       return;
@@ -71,19 +122,34 @@ export default function ProductPage() {
     try {
       setAddingToCart(true);
 
+      const body = customizationData
+        ? {
+            productId: product.id,
+            quantity: customizationData.quantity,
+            customizations: customizationData.customizations,
+            customizationHash: customizationData.customizationHash,
+          }
+        : { productId: product.id, quantity: 1 };
+
       const response = await fetch("/api/cart", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          productId: product.id,
-          quantity: 1,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
+        const data = await response.json();
+        if (data.cart && data.cart.items) {
+          const count = data.cart.items.reduce(
+            (total, item) => total + item.quantity,
+            0,
+          );
+          setCartItemCount(count);
+        }
         setSuccessMessage("Produto adicionado ao carrinho!");
+        setShowAssembleModal(false);
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         alert("Erro ao adicionar produto ao carrinho");
@@ -183,8 +249,14 @@ export default function ProductPage() {
 
               <div className="mb-8">
                 <span className="text-4xl font-bold text-green-600">
+                  {product.isAssemblable ? "A partir de " : ""}
                   {formatPrice(product.price)}
                 </span>
+                {product.isAssemblable && (
+                  <span className="ml-3 text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                    🧩 Montável
+                  </span>
+                )}
               </div>
 
               <div className="mb-6">
@@ -265,11 +337,21 @@ export default function ProductPage() {
                 session &&
                 (product.stock === null || product.stock > 0) ? (
                   <button
-                    onClick={addToCart}
+                    onClick={() => {
+                      if (product.isAssemblable) {
+                        setShowAssembleModal(true);
+                      } else {
+                        addToCart();
+                      }
+                    }}
                     disabled={addingToCart}
                     className="w-full bg-green-600 text-white py-4 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transition-colors"
                   >
-                    {addingToCart ? "Adicionando..." : "Adicionar ao Carrinho"}
+                    {addingToCart
+                      ? "Adicionando..."
+                      : product.isAssemblable
+                        ? "🧩 Montar Produto"
+                        : "Adicionar ao Carrinho"}
                   </button>
                 ) : !session ? (
                   <Link
@@ -341,6 +423,46 @@ export default function ProductPage() {
           </div>
         )}
       </main>
+
+      {/* Carrinho Flutuante */}
+      {showFloatingCart && cartItemCount > 0 && (
+        <div className="fixed top-4 right-4 z-[9999] md:top-4 md:right-4 pointer-events-none safe-area-inset">
+          <Link
+            href="/painel/carrinho"
+            className="bg-green-600 text-white rounded-full p-3 md:p-4 shadow-2xl hover:bg-green-700 transition-all duration-300 hover:scale-110 flex items-center justify-center relative pointer-events-auto border-2 border-white"
+            title="Ver carrinho"
+            style={{ zIndex: 9999 }}
+          >
+            <svg
+              className="w-5 h-5 md:w-6 md:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13l-1.1 5M7 13h10m0 0v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8z"
+              />
+            </svg>
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold">
+                {cartItemCount}
+              </span>
+            )}
+          </Link>
+        </div>
+      )}
+
+      {/* Modal de produto montável */}
+      <AssemblableProductModal
+        product={product}
+        isOpen={showAssembleModal}
+        onClose={() => setShowAssembleModal(false)}
+        onAddToCart={(data) => addToCart(data)}
+        adding={addingToCart}
+      />
 
       <Footer />
     </div>

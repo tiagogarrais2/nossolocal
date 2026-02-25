@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
+import AssemblableProductModal, {
+  computeCustomizationHash,
+} from "../../../components/AssemblableProductModal";
 import { formatPrice } from "../../../lib/utils";
 
 export default function CarrinhoPage() {
@@ -27,6 +30,8 @@ export default function CarrinhoPage() {
   const [userAddresses, setUserAddresses] = useState([]);
   const [visibleErrors, setVisibleErrors] = useState([]);
   const errorTimeoutRef = useRef(null);
+  const [editingCartItem, setEditingCartItem] = useState(null);
+  const [editModalAdding, setEditModalAdding] = useState(false);
 
   // Mostrar erros com toast e scroll automático
   useEffect(() => {
@@ -213,6 +218,61 @@ export default function CarrinhoPage() {
     }
   };
 
+  // Editar produto montável: abre o modal com as seleções atuais
+  const handleEditAssemblable = (item) => {
+    if (!item.customizations || !item.product?.groups?.length) return;
+    setEditingCartItem(item);
+  };
+
+  // Callback quando o modal de edição confirma
+  const handleEditConfirm = async ({
+    productId,
+    quantity: newQty,
+    customizations,
+    customizationHash,
+  }) => {
+    if (!editingCartItem) return;
+    setEditModalAdding(true);
+    try {
+      // 1. Remover o item antigo
+      const delRes = await fetch(`/api/cart/${editingCartItem.id}`, {
+        method: "DELETE",
+      });
+      if (!delRes.ok) {
+        const errData = await delRes.json();
+        setErrors([errData.error || "Erro ao atualizar produto"]);
+        setEditModalAdding(false);
+        return;
+      }
+      // 2. Adicionar o novo item com customizações atualizadas
+      const addRes = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          quantity: newQty,
+          customizations,
+          customizationHash,
+        }),
+      });
+      if (!addRes.ok) {
+        const errData = await addRes.json();
+        setErrors([errData.error || "Erro ao atualizar produto"]);
+      } else {
+        setSuccessMessage("Produto atualizado!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      }
+      // 3. Recarregar o carrinho
+      await fetchCart();
+    } catch (error) {
+      console.error("Erro ao editar produto montável:", error);
+      setErrors(["Erro ao atualizar produto"]);
+    } finally {
+      setEditModalAdding(false);
+      setEditingCartItem(null);
+    }
+  };
+
   const groupItemsByStore = (items) => {
     const grouped = {};
     items.forEach((item) => {
@@ -228,17 +288,36 @@ export default function CarrinhoPage() {
     return grouped;
   };
 
+  // Calcula o preço unitário de um item (base + acréscimos das customizações)
+  const getItemUnitPrice = (item) => {
+    let price = item.product.price || 0;
+    if (item.customizations && typeof item.customizations === "object") {
+      Object.values(item.customizations).forEach((group) => {
+        if (group.selected && Array.isArray(group.selected)) {
+          group.selected.forEach((sel) => {
+            if (group.type === "quantity") {
+              price += (sel.price || 0) * (sel.quantity || 1);
+            } else {
+              price += sel.price || 0;
+            }
+          });
+        }
+      });
+    }
+    return price;
+  };
+
   const calculateTotal = () => {
     if (!cart || !cart.items) return 0;
     return cart.items.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      (sum, item) => sum + getItemUnitPrice(item) * item.quantity,
       0,
     );
   };
 
   const calculateStoreTotal = (storeItems, deliveryFee = 0) => {
     const subtotal = storeItems.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      (sum, item) => sum + getItemUnitPrice(item) * item.quantity,
       0,
     );
     return subtotal + deliveryFee;
@@ -355,7 +434,7 @@ export default function CarrinhoPage() {
         storeIdToProcess || Object.keys(groupedItems)[0];
       const { items } = groupedItems[storeIdForValidation];
       const subtotal = items.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
+        (sum, item) => sum + getItemUnitPrice(item) * item.quantity,
         0,
       );
       const store = groupedItems[storeIdForValidation].store;
@@ -395,7 +474,7 @@ export default function CarrinhoPage() {
       for (const storeId in storesToProcess) {
         const { store, items } = groupedItems[storeId];
         const subtotal = items.reduce(
-          (sum, item) => sum + item.product.price * item.quantity,
+          (sum, item) => sum + getItemUnitPrice(item) * item.quantity,
           0,
         );
         const deliveryFee = calculateDeliveryFee(
@@ -415,7 +494,8 @@ export default function CarrinhoPage() {
               productId: item.product.id,
               productName: item.product.name,
               quantity: item.quantity,
-              price: item.product.price,
+              price: getItemUnitPrice(item),
+              customizations: item.customizations || null,
             })),
             subtotal,
             deliveryFee,
@@ -570,7 +650,7 @@ export default function CarrinhoPage() {
           {/* Seção de cada loja com seus itens e resumo */}
           {Object.entries(groupedItems).map(([storeId, { store, items }]) => {
             const storeSubtotal = items.reduce(
-              (sum, item) => sum + item.product.price * item.quantity,
+              (sum, item) => sum + getItemUnitPrice(item) * item.quantity,
               0,
             );
             const storeDeliveryFee = calculateDeliveryFee(
@@ -601,9 +681,39 @@ export default function CarrinhoPage() {
                                 {item.product.name}
                               </p>
                             </Link>
-                            <p className="text-gray-600 text-sm mb-2">
-                              {formatPrice(item.product.price)} cada
+                            <p className="text-gray-600 text-sm mb-1">
+                              {formatPrice(getItemUnitPrice(item))} cada
                             </p>
+                            {/* Exibir customizações do produto montável */}
+                            {item.customizations &&
+                              typeof item.customizations === "object" &&
+                              Object.keys(item.customizations).length > 0 && (
+                                <div className="text-xs text-gray-500 mb-2 space-y-0.5">
+                                  {Object.values(item.customizations).map(
+                                    (group, idx) => (
+                                      <p key={idx}>
+                                        <span className="font-medium text-gray-600">
+                                          {group.groupName}:
+                                        </span>{" "}
+                                        {group.selected
+                                          .map((sel) =>
+                                            group.type === "quantity"
+                                              ? `${sel.quantity}x ${sel.name}`
+                                              : sel.name,
+                                          )
+                                          .join(", ")}
+                                      </p>
+                                    ),
+                                  )}
+                                  <button
+                                    onClick={() => handleEditAssemblable(item)}
+                                    disabled={updating}
+                                    className="mt-1 text-xs text-purple-600 hover:text-purple-800 font-medium underline disabled:opacity-50"
+                                  >
+                                    ✏️ Editar montagem
+                                  </button>
+                                </div>
+                              )}
                           </div>
 
                           <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-3">
@@ -658,7 +768,7 @@ export default function CarrinhoPage() {
                               </span>
                               <p className="font-semibold min-w-fit">
                                 {formatPrice(
-                                  item.product.price * item.quantity,
+                                  getItemUnitPrice(item) * item.quantity,
                                 )}
                               </p>
                             </div>
@@ -1094,6 +1204,20 @@ export default function CarrinhoPage() {
         </div>
       </div>
       <Footer />
+
+      {/* Modal de edição de produto montável */}
+      {editingCartItem && (
+        <AssemblableProductModal
+          product={editingCartItem.product}
+          isOpen={!!editingCartItem}
+          onClose={() => setEditingCartItem(null)}
+          onAddToCart={handleEditConfirm}
+          adding={editModalAdding}
+          editMode={true}
+          initialCustomizations={editingCartItem.customizations}
+          initialQuantity={editingCartItem.quantity}
+        />
+      )}
     </div>
   );
 }

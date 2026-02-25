@@ -16,6 +16,31 @@ export default function ProductForm({
   const [imageUploading, setImageUploading] = useState(false);
   const [uploadTimeout, setUploadTimeout] = useState(null);
 
+  const emptyGroup = () => ({
+    name: "",
+    type: "checkbox",
+    required: false,
+    minSelections: 0,
+    maxSelections: 1,
+    dependsOn: null,
+    options: [{ name: "", description: "", price: 0, available: true }],
+  });
+
+  // Helper: retorna os grupos anteriores a gi que podem ser grupo-pai
+  const getParentGroupCandidates = (gi) => {
+    return formData.groups
+      .map((g, i) => ({ ...g, index: i }))
+      .filter((g, i) => i < gi && g.name.trim() !== "");
+  };
+
+  // Helper: retorna as opções do grupo-pai referenciado pelo dependsOn
+  const getParentGroupOptions = (dependsOn) => {
+    if (!dependsOn || dependsOn.groupIndex === undefined) return [];
+    const parentGroup = formData.groups[dependsOn.groupIndex];
+    if (!parentGroup) return [];
+    return parentGroup.options.filter((o) => o.name.trim() !== "");
+  };
+
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
@@ -25,6 +50,8 @@ export default function ProductForm({
     stock: initialData?.stock?.toString() || "",
     hasStockControl:
       initialData?.stock !== null && initialData?.stock !== undefined,
+    isAssemblable: initialData?.isAssemblable || false,
+    groups: initialData?.groups || [],
   });
 
   // Atualizar formData quando initialData mudar (importante para edição)
@@ -39,6 +66,8 @@ export default function ProductForm({
         stock: initialData?.stock?.toString() || "",
         hasStockControl:
           initialData?.stock !== null && initialData?.stock !== undefined,
+        isAssemblable: initialData?.isAssemblable || false,
+        groups: initialData?.groups || [],
       });
     }
   }, [initialData]);
@@ -163,8 +192,13 @@ export default function ProductForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Preço (R$) *
+            {formData.isAssemblable ? "Preço Base (R$)" : "Preço (R$) *"}
           </label>
+          {formData.isAssemblable && (
+            <p className="text-xs text-gray-500 mb-1">
+              Opcional para montáveis — o preço pode vir das opções
+            </p>
+          )}
           <input
             type="number"
             step="0.01"
@@ -175,7 +209,7 @@ export default function ProductForm({
             }
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="0.00"
-            required
+            required={!formData.isAssemblable}
           />
         </div>
 
@@ -406,6 +440,758 @@ export default function ProductForm({
                 Deixe em branco ou desative o controle para vendas ilimitadas. A
                 cada venda, o estoque será reduzido automaticamente.
               </p>
+            </div>
+          )}
+        </div>
+
+        {/* Produto Montável */}
+        <div className="border-t pt-6">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="isAssemblable"
+              checked={formData.isAssemblable}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setFormData({
+                  ...formData,
+                  isAssemblable: checked,
+                  groups:
+                    checked && formData.groups.length === 0
+                      ? [emptyGroup()]
+                      : formData.groups,
+                });
+              }}
+              className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="isAssemblable"
+              className="ml-2 block text-sm font-medium text-gray-900"
+            >
+              🧩 Este produto é montável
+            </label>
+            <span className="ml-2 text-xs text-gray-500">
+              (marmita, pizza, açaí, esfirra...)
+            </span>
+          </div>
+
+          {formData.isAssemblable && (
+            <div className="ml-2 space-y-6">
+              <p className="text-sm text-gray-600">
+                Configure os grupos de personalização. Cada grupo contém opções
+                para o cliente escolher.
+              </p>
+
+              {formData.groups.map((group, gi) => (
+                <div
+                  key={gi}
+                  className="border border-purple-200 rounded-lg p-4 bg-purple-50/30"
+                >
+                  {/* Header do grupo */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-semibold text-purple-800">
+                      Grupo {gi + 1}
+                    </h4>
+                    <div className="flex items-center gap-1">
+                      {gi > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newGroups = [...formData.groups];
+                            [newGroups[gi - 1], newGroups[gi]] = [
+                              newGroups[gi],
+                              newGroups[gi - 1],
+                            ];
+                            setFormData({ ...formData, groups: newGroups });
+                          }}
+                          className="p-1 text-gray-500 hover:text-purple-700 text-xs"
+                          title="Mover para cima"
+                        >
+                          ▲
+                        </button>
+                      )}
+                      {gi < formData.groups.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newGroups = [...formData.groups];
+                            [newGroups[gi], newGroups[gi + 1]] = [
+                              newGroups[gi + 1],
+                              newGroups[gi],
+                            ];
+                            setFormData({ ...formData, groups: newGroups });
+                          }}
+                          className="p-1 text-gray-500 hover:text-purple-700 text-xs"
+                          title="Mover para baixo"
+                        >
+                          ▼
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newGroups = formData.groups.filter(
+                            (_, i) => i !== gi,
+                          );
+                          setFormData({ ...formData, groups: newGroups });
+                        }}
+                        className="ml-2 p-1 text-red-500 hover:text-red-700 text-sm"
+                        title="Remover grupo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Nome do grupo */}
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      value={group.name}
+                      onChange={(e) => {
+                        const newGroups = [...formData.groups];
+                        newGroups[gi] = {
+                          ...newGroups[gi],
+                          name: e.target.value,
+                        };
+                        setFormData({ ...formData, groups: newGroups });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Nome do grupo (ex: Tamanho, Sabor, Borda...)"
+                    />
+                  </div>
+
+                  {/* Configurações do grupo */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Tipo
+                      </label>
+                      <select
+                        value={group.type}
+                        onChange={(e) => {
+                          const newGroups = [...formData.groups];
+                          const type = e.target.value;
+                          newGroups[gi] = {
+                            ...newGroups[gi],
+                            type,
+                            minSelections:
+                              type === "radio"
+                                ? 1
+                                : newGroups[gi].minSelections,
+                            maxSelections:
+                              type === "radio"
+                                ? 1
+                                : newGroups[gi].maxSelections,
+                          };
+                          setFormData({ ...formData, groups: newGroups });
+                        }}
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                      >
+                        <option value="radio">Escolha única</option>
+                        <option value="checkbox">Múltipla escolha</option>
+                        <option value="quantity">Quantidade</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-1.5 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={group.required}
+                          onChange={(e) => {
+                            const newGroups = [...formData.groups];
+                            newGroups[gi] = {
+                              ...newGroups[gi],
+                              required: e.target.checked,
+                            };
+                            setFormData({ ...formData, groups: newGroups });
+                          }}
+                          className="h-3.5 w-3.5 text-purple-600 border-gray-300 rounded"
+                        />
+                        <span className="text-gray-700">Obrigatório</span>
+                      </label>
+                    </div>
+
+                    {group.type !== "radio" && (
+                      <>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Mín. seleções
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={group.minSelections}
+                            onChange={(e) => {
+                              const newGroups = [...formData.groups];
+                              newGroups[gi] = {
+                                ...newGroups[gi],
+                                minSelections: parseInt(e.target.value) || 0,
+                              };
+                              setFormData({ ...formData, groups: newGroups });
+                            }}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">
+                            Máx. seleções
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={group.maxSelections}
+                            onChange={(e) => {
+                              const newGroups = [...formData.groups];
+                              newGroups[gi] = {
+                                ...newGroups[gi],
+                                maxSelections: parseInt(e.target.value) || 1,
+                              };
+                              setFormData({ ...formData, groups: newGroups });
+                            }}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Dependências do grupo */}
+                  {gi > 0 && (
+                    <div className="mb-4">
+                      <label className="flex items-center gap-1.5 text-xs mb-2">
+                        <input
+                          type="checkbox"
+                          checked={!!group.dependsOn}
+                          onChange={(e) => {
+                            const newGroups = [...formData.groups];
+                            if (e.target.checked) {
+                              const candidates = getParentGroupCandidates(gi);
+                              const parentIdx =
+                                candidates.length > 0 ? candidates[0].index : 0;
+                              newGroups[gi] = {
+                                ...newGroups[gi],
+                                dependsOn: { groupIndex: parentIdx, rules: {} },
+                              };
+                            } else {
+                              newGroups[gi] = {
+                                ...newGroups[gi],
+                                dependsOn: null,
+                              };
+                            }
+                            setFormData({ ...formData, groups: newGroups });
+                          }}
+                          className="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded"
+                        />
+                        <span className="text-gray-700 font-medium">
+                          🔗 Depende de outro grupo
+                        </span>
+                        <span className="text-gray-400">
+                          (min/máx dinâmico)
+                        </span>
+                      </label>
+
+                      {group.dependsOn && (
+                        <div className="ml-5 p-3 bg-blue-50/50 border border-blue-200 rounded-lg space-y-3">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Grupo de referência
+                            </label>
+                            <select
+                              value={group.dependsOn.groupIndex ?? 0}
+                              onChange={(e) => {
+                                const newGroups = [...formData.groups];
+                                newGroups[gi] = {
+                                  ...newGroups[gi],
+                                  dependsOn: {
+                                    ...newGroups[gi].dependsOn,
+                                    groupIndex: parseInt(e.target.value),
+                                    rules: {},
+                                  },
+                                };
+                                setFormData({ ...formData, groups: newGroups });
+                              }}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            >
+                              {getParentGroupCandidates(gi).map((pg) => (
+                                <option key={pg.index} value={pg.index}>
+                                  Grupo {pg.index + 1}: {pg.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-2">
+                              Regras por opção do grupo-pai
+                            </label>
+                            <div className="space-y-1.5">
+                              {getParentGroupOptions(group.dependsOn).map(
+                                (parentOpt) => {
+                                  const rule =
+                                    group.dependsOn.rules?.[parentOpt.name] ||
+                                    {};
+                                  return (
+                                    <div
+                                      key={parentOpt.name}
+                                      className="flex items-center gap-2 text-xs"
+                                    >
+                                      <span
+                                        className="w-28 truncate font-medium text-gray-700"
+                                        title={parentOpt.name}
+                                      >
+                                        {parentOpt.name}
+                                      </span>
+                                      <label className="flex items-center gap-1">
+                                        <span className="text-gray-500">
+                                          Mín:
+                                        </span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          value={rule.minSelections ?? ""}
+                                          onChange={(e) => {
+                                            const newGroups = [
+                                              ...formData.groups,
+                                            ];
+                                            const dep = {
+                                              ...newGroups[gi].dependsOn,
+                                            };
+                                            dep.rules = {
+                                              ...dep.rules,
+                                              [parentOpt.name]: {
+                                                ...dep.rules?.[parentOpt.name],
+                                                minSelections:
+                                                  parseInt(e.target.value) || 0,
+                                              },
+                                            };
+                                            newGroups[gi] = {
+                                              ...newGroups[gi],
+                                              dependsOn: dep,
+                                            };
+                                            setFormData({
+                                              ...formData,
+                                              groups: newGroups,
+                                            });
+                                          }}
+                                          className="w-14 px-1.5 py-1 border border-gray-300 rounded text-xs"
+                                        />
+                                      </label>
+                                      <label className="flex items-center gap-1">
+                                        <span className="text-gray-500">
+                                          Máx:
+                                        </span>
+                                        <input
+                                          type="number"
+                                          min="1"
+                                          value={rule.maxSelections ?? ""}
+                                          onChange={(e) => {
+                                            const newGroups = [
+                                              ...formData.groups,
+                                            ];
+                                            const dep = {
+                                              ...newGroups[gi].dependsOn,
+                                            };
+                                            dep.rules = {
+                                              ...dep.rules,
+                                              [parentOpt.name]: {
+                                                ...dep.rules?.[parentOpt.name],
+                                                maxSelections:
+                                                  parseInt(e.target.value) || 1,
+                                              },
+                                            };
+                                            newGroups[gi] = {
+                                              ...newGroups[gi],
+                                              dependsOn: dep,
+                                            };
+                                            setFormData({
+                                              ...formData,
+                                              groups: newGroups,
+                                            });
+                                          }}
+                                          className="w-14 px-1.5 py-1 border border-gray-300 rounded text-xs"
+                                        />
+                                      </label>
+                                    </div>
+                                  );
+                                },
+                              )}
+                              {getParentGroupOptions(group.dependsOn).length ===
+                                0 && (
+                                <p className="text-xs text-gray-400 italic">
+                                  Adicione opções ao grupo de referência
+                                  primeiro
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Opções do grupo */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-gray-700">
+                      Opções
+                    </label>
+                    {group.options.map((option, oi) => (
+                      <div key={oi} className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={option.name}
+                            onChange={(e) => {
+                              const newGroups = [...formData.groups];
+                              const newOptions = [...newGroups[gi].options];
+                              newOptions[oi] = {
+                                ...newOptions[oi],
+                                name: e.target.value,
+                              };
+                              newGroups[gi] = {
+                                ...newGroups[gi],
+                                options: newOptions,
+                              };
+                              setFormData({ ...formData, groups: newGroups });
+                            }}
+                            className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            placeholder="Nome da opção"
+                          />
+                          <input
+                            type="text"
+                            value={option.description || ""}
+                            onChange={(e) => {
+                              const newGroups = [...formData.groups];
+                              const newOptions = [...newGroups[gi].options];
+                              newOptions[oi] = {
+                                ...newOptions[oi],
+                                description: e.target.value,
+                              };
+                              newGroups[gi] = {
+                                ...newGroups[gi],
+                                options: newOptions,
+                              };
+                              setFormData({ ...formData, groups: newGroups });
+                            }}
+                            className="w-28 px-2 py-1.5 border border-gray-300 rounded text-sm hidden md:block"
+                            placeholder="Descrição"
+                          />
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                              R$
+                            </span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={option.price || ""}
+                              onChange={(e) => {
+                                const newGroups = [...formData.groups];
+                                const newOptions = [...newGroups[gi].options];
+                                newOptions[oi] = {
+                                  ...newOptions[oi],
+                                  price: parseFloat(e.target.value) || 0,
+                                };
+                                newGroups[gi] = {
+                                  ...newGroups[gi],
+                                  options: newOptions,
+                                };
+                                setFormData({ ...formData, groups: newGroups });
+                              }}
+                              className="w-24 pl-7 pr-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <label className="flex items-center gap-1 text-xs whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={option.available !== false}
+                              onChange={(e) => {
+                                const newGroups = [...formData.groups];
+                                const newOptions = [...newGroups[gi].options];
+                                newOptions[oi] = {
+                                  ...newOptions[oi],
+                                  available: e.target.checked,
+                                };
+                                newGroups[gi] = {
+                                  ...newGroups[gi],
+                                  options: newOptions,
+                                };
+                                setFormData({ ...formData, groups: newGroups });
+                              }}
+                              className="h-3.5 w-3.5 text-green-600 border-gray-300 rounded"
+                            />
+                            <span className="hidden sm:inline">Disp.</span>
+                          </label>
+
+                          {/* Reorder option buttons */}
+                          <div className="flex flex-col">
+                            {oi > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newGroups = [...formData.groups];
+                                  const newOptions = [...newGroups[gi].options];
+                                  [newOptions[oi - 1], newOptions[oi]] = [
+                                    newOptions[oi],
+                                    newOptions[oi - 1],
+                                  ];
+                                  newGroups[gi] = {
+                                    ...newGroups[gi],
+                                    options: newOptions,
+                                  };
+                                  setFormData({
+                                    ...formData,
+                                    groups: newGroups,
+                                  });
+                                }}
+                                className="text-gray-400 hover:text-purple-600 text-[10px] leading-none"
+                              >
+                                ▲
+                              </button>
+                            )}
+                            {oi < group.options.length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newGroups = [...formData.groups];
+                                  const newOptions = [...newGroups[gi].options];
+                                  [newOptions[oi], newOptions[oi + 1]] = [
+                                    newOptions[oi + 1],
+                                    newOptions[oi],
+                                  ];
+                                  newGroups[gi] = {
+                                    ...newGroups[gi],
+                                    options: newOptions,
+                                  };
+                                  setFormData({
+                                    ...formData,
+                                    groups: newGroups,
+                                  });
+                                }}
+                                className="text-gray-400 hover:text-purple-600 text-[10px] leading-none"
+                              >
+                                ▼
+                              </button>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newGroups = [...formData.groups];
+                              const newOptions = newGroups[gi].options.filter(
+                                (_, i) => i !== oi,
+                              );
+                              newGroups[gi] = {
+                                ...newGroups[gi],
+                                options: newOptions,
+                              };
+                              setFormData({ ...formData, groups: newGroups });
+                            }}
+                            className="text-red-400 hover:text-red-600 text-sm"
+                            title="Remover opção"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {/* Preço variável por grupo-pai */}
+                        {gi > 0 && option.name.trim() !== "" && (
+                          <div className="ml-2">
+                            <label className="flex items-center gap-1.5 text-xs">
+                              <input
+                                type="checkbox"
+                                checked={!!option.priceMatrix}
+                                onChange={(e) => {
+                                  const newGroups = [...formData.groups];
+                                  const newOptions = [...newGroups[gi].options];
+                                  if (e.target.checked) {
+                                    const candidates =
+                                      getParentGroupCandidates(gi);
+                                    const parentIdx =
+                                      candidates.length > 0
+                                        ? candidates[0].index
+                                        : 0;
+                                    newOptions[oi] = {
+                                      ...newOptions[oi],
+                                      priceMatrix: {
+                                        groupIndex: parentIdx,
+                                        prices: {},
+                                      },
+                                    };
+                                  } else {
+                                    newOptions[oi] = {
+                                      ...newOptions[oi],
+                                      priceMatrix: null,
+                                    };
+                                  }
+                                  newGroups[gi] = {
+                                    ...newGroups[gi],
+                                    options: newOptions,
+                                  };
+                                  setFormData({
+                                    ...formData,
+                                    groups: newGroups,
+                                  });
+                                }}
+                                className="h-3 w-3 text-amber-600 border-gray-300 rounded"
+                              />
+                              <span className="text-gray-500">
+                                💰 Preço variável
+                              </span>
+                            </label>
+
+                            {option.priceMatrix && (
+                              <div className="mt-1.5 ml-4 p-2 bg-amber-50/50 border border-amber-200 rounded space-y-1.5">
+                                <select
+                                  value={option.priceMatrix.groupIndex ?? 0}
+                                  onChange={(e) => {
+                                    const newGroups = [...formData.groups];
+                                    const newOptions = [
+                                      ...newGroups[gi].options,
+                                    ];
+                                    newOptions[oi] = {
+                                      ...newOptions[oi],
+                                      priceMatrix: {
+                                        ...newOptions[oi].priceMatrix,
+                                        groupIndex: parseInt(e.target.value),
+                                        prices: {},
+                                      },
+                                    };
+                                    newGroups[gi] = {
+                                      ...newGroups[gi],
+                                      options: newOptions,
+                                    };
+                                    setFormData({
+                                      ...formData,
+                                      groups: newGroups,
+                                    });
+                                  }}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                                >
+                                  {getParentGroupCandidates(gi).map((pg) => (
+                                    <option key={pg.index} value={pg.index}>
+                                      Grupo {pg.index + 1}: {pg.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="space-y-1">
+                                  {(() => {
+                                    const parentGroup =
+                                      formData.groups[
+                                        option.priceMatrix.groupIndex
+                                      ];
+                                    if (!parentGroup) return null;
+                                    return parentGroup.options
+                                      .filter((po) => po.name.trim() !== "")
+                                      .map((parentOpt) => (
+                                        <div
+                                          key={parentOpt.name}
+                                          className="flex items-center gap-2 text-xs"
+                                        >
+                                          <span
+                                            className="w-24 truncate text-gray-700"
+                                            title={parentOpt.name}
+                                          >
+                                            {parentOpt.name}
+                                          </span>
+                                          <div className="relative">
+                                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">
+                                              R$
+                                            </span>
+                                            <input
+                                              type="number"
+                                              step="0.01"
+                                              min="0"
+                                              value={
+                                                option.priceMatrix.prices?.[
+                                                  parentOpt.name
+                                                ] ?? ""
+                                              }
+                                              onChange={(e) => {
+                                                const newGroups = [
+                                                  ...formData.groups,
+                                                ];
+                                                const newOptions = [
+                                                  ...newGroups[gi].options,
+                                                ];
+                                                const pm = {
+                                                  ...newOptions[oi].priceMatrix,
+                                                };
+                                                pm.prices = {
+                                                  ...pm.prices,
+                                                  [parentOpt.name]:
+                                                    parseFloat(
+                                                      e.target.value,
+                                                    ) || 0,
+                                                };
+                                                newOptions[oi] = {
+                                                  ...newOptions[oi],
+                                                  priceMatrix: pm,
+                                                };
+                                                newGroups[gi] = {
+                                                  ...newGroups[gi],
+                                                  options: newOptions,
+                                                };
+                                                setFormData({
+                                                  ...formData,
+                                                  groups: newGroups,
+                                                });
+                                              }}
+                                              className="w-20 pl-6 pr-1 py-1 border border-gray-300 rounded text-xs"
+                                              placeholder="0.00"
+                                            />
+                                          </div>
+                                        </div>
+                                      ));
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newGroups = [...formData.groups];
+                        newGroups[gi] = {
+                          ...newGroups[gi],
+                          options: [
+                            ...newGroups[gi].options,
+                            {
+                              name: "",
+                              description: "",
+                              price: 0,
+                              available: true,
+                            },
+                          ],
+                        };
+                        setFormData({ ...formData, groups: newGroups });
+                      }}
+                      className="text-sm text-purple-600 hover:text-purple-800 font-medium"
+                    >
+                      + Adicionar opção
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    ...formData,
+                    groups: [...formData.groups, emptyGroup()],
+                  });
+                }}
+                className="w-full py-2 border-2 border-dashed border-purple-300 rounded-lg text-purple-600 hover:border-purple-500 hover:text-purple-800 text-sm font-medium transition-colors"
+              >
+                + Adicionar grupo de personalização
+              </button>
             </div>
           )}
         </div>

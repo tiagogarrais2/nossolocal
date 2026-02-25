@@ -168,17 +168,53 @@ model PixKey {
 }
 
 model Product {
-  id          String  @id @default(cuid())
-  storeId     String
-  name        String
-  description String?
-  price       Float
-  images      String[] // Campo único para múltiplas imagens
-  available   Boolean @default(true)
-  stock       Int?     // Quantidade disponível em estoque (opcional - null = ilimitado)
+  id            String  @id @default(cuid())
+  storeId       String
+  name          String
+  description   String?
+  price         Float
+  images        String[] // Campo único para múltiplas imagens
+  available     Boolean @default(true)
+  stock         Int?     // Quantidade disponível em estoque (opcional - null = ilimitado)
+  isAssemblable Boolean @default(false) // Produto montável (marmita, pizza, açaí...)
 
-  store     Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  store     Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
+  groups    ProductGroup[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductGroup {
+  id            String  @id @default(cuid())
+  productId     String
+  name          String   // Ex: "Tamanho", "Sabores", "Borda"
+  type          String   @default("checkbox") // radio | checkbox | quantity
+  required      Boolean  @default(false)
+  minSelections Int      @default(0)
+  maxSelections Int      @default(1)
+  order         Int      @default(0)
+  dependsOn     Json?    // Regras de dependência: { groupOrder, rules: { "NomeOpção": { minSelections, maxSelections } } }
+
+  product Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options ProductGroupOption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductGroupOption {
+  id          String  @id @default(cuid())
+  groupId     String
+  name        String   // Ex: "Grande", "Frango", "Catupiry"
+  description String?
+  price       Float    @default(0) // Acréscimo no preço
+  available   Boolean  @default(true)
+  order       Int      @default(0)
+  priceMatrix Json?    // Preços variáveis: { groupOrder, prices: { "NomeOpção": 5.00 } }
+
+  group ProductGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -197,10 +233,12 @@ model Cart {
 }
 
 model CartItem {
-  id        String @id @default(cuid())
-  cartId    String
-  productId String
-  quantity  Int    @default(1)
+  id                String  @id @default(cuid())
+  cartId            String
+  productId         String
+  quantity          Int     @default(1)
+  customizations    Json?   // Seleções do produto montável
+  customizationHash String  @default("") // Hash das customizações para unique constraint
 
   cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -208,7 +246,7 @@ model CartItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([cartId, productId])
+  @@unique([cartId, productId, customizationHash])
 }
 
 model Order {

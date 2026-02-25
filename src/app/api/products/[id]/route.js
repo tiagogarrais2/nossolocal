@@ -13,6 +13,10 @@ export async function GET(request, { params }) {
       where: { id },
       include: {
         store: true,
+        groups: {
+          include: { options: { orderBy: { order: "asc" } } },
+          orderBy: { order: "asc" },
+        },
       },
     });
 
@@ -44,8 +48,17 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    const { storeId, name, description, price, images, available, stock } =
-      await request.json();
+    const {
+      storeId,
+      name,
+      description,
+      price,
+      images,
+      available,
+      stock,
+      isAssemblable,
+      groups,
+    } = await request.json();
 
     // Validação básica
     const errors = [];
@@ -83,23 +96,80 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // Atualizar o produto
-    const updatedProduct = await prisma.product.update({
-      where: { id },
-      data: {
-        name: name.trim(),
-        description: description?.trim() || null,
-        price: parseFloat(price),
-        images: images || [],
-        available: available === true,
-        stock:
-          stock !== undefined && stock !== null && stock !== ""
-            ? parseInt(stock)
-            : null,
-      },
+    // Atualizar o produto e sincronizar grupos em transação
+    const updatedProduct = await prisma.$transaction(async (tx) => {
+      const updated = await tx.product.update({
+        where: { id },
+        data: {
+          name: name.trim(),
+          description: description?.trim() || null,
+          price: parseFloat(price),
+          images: images || [],
+          available: available === true,
+          stock:
+            stock !== undefined && stock !== null && stock !== ""
+              ? parseInt(stock)
+              : null,
+          isAssemblable: isAssemblable || false,
+        },
+      });
+
+      // Sincronizar grupos: delete-and-recreate
+      await tx.productGroupOption.deleteMany({
+        where: { group: { productId: id } },
+      });
+      await tx.productGroup.deleteMany({
+        where: { productId: id },
+      });
+
+      if (isAssemblable && groups && Array.isArray(groups)) {
+        for (let gi = 0; gi < groups.length; gi++) {
+          const group = groups[gi];
+          const createdGroup = await tx.productGroup.create({
+            data: {
+              productId: id,
+              name: group.name,
+              type: group.type || "checkbox",
+              required: group.required || false,
+              minSelections: group.minSelections || 0,
+              maxSelections: group.maxSelections || 1,
+              order: gi,
+              dependsOn: group.dependsOn || null,
+            },
+          });
+
+          if (group.options && Array.isArray(group.options)) {
+            for (let oi = 0; oi < group.options.length; oi++) {
+              const option = group.options[oi];
+              await tx.productGroupOption.create({
+                data: {
+                  groupId: createdGroup.id,
+                  name: option.name,
+                  description: option.description || null,
+                  price: parseFloat(option.price || 0),
+                  available:
+                    option.available !== undefined ? option.available : true,
+                  order: oi,
+                  priceMatrix: option.priceMatrix || null,
+                },
+              });
+            }
+          }
+        }
+      }
+
+      return tx.product.findUnique({
+        where: { id },
+        include: {
+          groups: {
+            include: { options: { orderBy: { order: "asc" } } },
+            orderBy: { order: "asc" },
+          },
+        },
+      });
     });
 
-    console.log("Produto atualizado:", updatedProduct);
+    console.log("Produto atualizado:", updatedProduct.id);
 
     return NextResponse.json({
       message: "Produto atualizado com sucesso",

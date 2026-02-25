@@ -45,6 +45,12 @@ export async function GET(request) {
     // Buscar produtos (públicos para todos)
     const products = await prisma.product.findMany({
       where: { storeId },
+      include: {
+        groups: {
+          include: { options: { orderBy: { order: "asc" } } },
+          orderBy: { order: "asc" },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -82,8 +88,17 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { storeId, name, description, price, images, available, stock } =
-      body;
+    const {
+      storeId,
+      name,
+      description,
+      price,
+      images,
+      available,
+      stock,
+      isAssemblable,
+      groups,
+    } = body;
 
     const errors = [];
 
@@ -130,19 +145,69 @@ export async function POST(request) {
       );
     }
 
-    const product = await prisma.product.create({
-      data: {
-        storeId,
-        name: name.trim(),
-        description: description?.trim() || null,
-        price: parseFloat(price.toString().replace(",", ".")),
-        images: images || [],
-        available: available !== undefined ? available : true,
-        stock:
-          stock !== undefined && stock !== null && stock !== ""
-            ? parseInt(stock)
-            : null,
-      },
+    const product = await prisma.$transaction(async (tx) => {
+      const newProduct = await tx.product.create({
+        data: {
+          storeId,
+          name: name.trim(),
+          description: description?.trim() || null,
+          price: parseFloat(price.toString().replace(",", ".")),
+          images: images || [],
+          available: available !== undefined ? available : true,
+          stock:
+            stock !== undefined && stock !== null && stock !== ""
+              ? parseInt(stock)
+              : null,
+          isAssemblable: isAssemblable || false,
+        },
+      });
+
+      // Criar grupos e opções para produtos montáveis
+      if (isAssemblable && groups && Array.isArray(groups)) {
+        for (let gi = 0; gi < groups.length; gi++) {
+          const group = groups[gi];
+          const createdGroup = await tx.productGroup.create({
+            data: {
+              productId: newProduct.id,
+              name: group.name,
+              type: group.type || "checkbox",
+              required: group.required || false,
+              minSelections: group.minSelections || 0,
+              maxSelections: group.maxSelections || 1,
+              order: gi,
+              dependsOn: group.dependsOn || null,
+            },
+          });
+
+          if (group.options && Array.isArray(group.options)) {
+            for (let oi = 0; oi < group.options.length; oi++) {
+              const option = group.options[oi];
+              await tx.productGroupOption.create({
+                data: {
+                  groupId: createdGroup.id,
+                  name: option.name,
+                  description: option.description || null,
+                  price: parseFloat(option.price || 0),
+                  available:
+                    option.available !== undefined ? option.available : true,
+                  order: oi,
+                  priceMatrix: option.priceMatrix || null,
+                },
+              });
+            }
+          }
+        }
+      }
+
+      return tx.product.findUnique({
+        where: { id: newProduct.id },
+        include: {
+          groups: {
+            include: { options: { orderBy: { order: "asc" } } },
+            orderBy: { order: "asc" },
+          },
+        },
+      });
     });
 
     return NextResponse.json({ product }, { status: 201 });

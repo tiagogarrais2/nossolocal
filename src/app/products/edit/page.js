@@ -68,6 +68,8 @@ function EditProductPageContent() {
               images: product.images || [],
               available: product.available,
               stock: product.stock,
+              isAssemblable: product.isAssemblable || false,
+              groups: product.groups || [],
             });
           } else {
             setErrors(["Produto não encontrado"]);

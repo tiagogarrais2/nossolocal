@@ -28,6 +28,10 @@ export async function GET(request) {
                 product: {
                   include: {
                     store: true,
+                    groups: {
+                      include: { options: { orderBy: { order: "asc" } } },
+                      orderBy: { order: "asc" },
+                    },
                   },
                 },
               },
@@ -47,6 +51,10 @@ export async function GET(request) {
               product: {
                 include: {
                   store: true,
+                  groups: {
+                    include: { options: { orderBy: { order: "asc" } } },
+                    orderBy: { order: "asc" },
+                  },
                 },
               },
             },
@@ -76,7 +84,12 @@ export async function POST(request) {
     let sessionId = cookieStore.get("cart_session")?.value;
 
     const body = await request.json();
-    const { productId, quantity = 1 } = body;
+    const {
+      productId,
+      quantity = 1,
+      customizations = null,
+      customizationHash = "",
+    } = body;
 
     if (!productId) {
       return NextResponse.json(
@@ -142,21 +155,20 @@ export async function POST(request) {
 
     // Se não existe carrinho, criar
     if (!cart) {
-      const cartData = userId 
-        ? { userId }
-        : { sessionId };
+      const cartData = userId ? { userId } : { sessionId };
 
       cart = await prisma.cart.create({
         data: cartData,
       });
     }
 
-    // Verificar se o produto já está no carrinho
+    // Verificar se o produto já está no carrinho (com mesmo hash de customização)
     const existingItem = await prisma.cartItem.findUnique({
       where: {
-        cartId_productId: {
+        cartId_productId_customizationHash: {
           cartId: cart.id,
           productId,
+          customizationHash: customizationHash || "",
         },
       },
     });
@@ -175,6 +187,8 @@ export async function POST(request) {
           cartId: cart.id,
           productId,
           quantity,
+          customizations: customizations || undefined,
+          customizationHash: customizationHash || "",
         },
       });
     }

@@ -8,6 +8,7 @@ import Image from "next/image";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import ProductImageCarousel from "../../../components/ProductImageCarousel";
+import AssemblableProductModal from "../../../components/AssemblableProductModal";
 import { formatPrice, getStateDisplay } from "../../../lib/utils";
 
 export default function LojaPage() {
@@ -26,6 +27,7 @@ export default function LojaPage() {
   const [togglingStore, setTogglingStore] = useState(false);
   const [showFloatingCart, setShowFloatingCart] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [assembleProduct, setAssembleProduct] = useState(null);
 
   // Mapeamento de códigos numéricos para siglas de UF
   const stateCodeToUF = {
@@ -179,7 +181,7 @@ export default function LojaPage() {
     }
   }, [session]);
 
-  const addToCart = async (product) => {
+  const addToCart = async (product, customizationData = null) => {
     // Verificar se o usuário está logado
     if (!session) {
       router.push("/login");
@@ -194,12 +196,20 @@ export default function LojaPage() {
 
     try {
       setAddingToCart(product.id);
+      const body = customizationData
+        ? {
+            productId: product.id,
+            quantity: customizationData.quantity,
+            customizations: customizationData.customizations,
+            customizationHash: customizationData.customizationHash,
+          }
+        : { productId: product.id };
       const response = await fetch("/api/cart", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ productId: product.id }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -211,7 +221,7 @@ export default function LojaPage() {
           );
           setCartItemCount(count);
         }
-        // Produto adicionado com sucesso - usuário permanece na loja
+        setAssembleProduct(null);
         setSuccessMessage(`${product.name} adicionado ao carrinho!`);
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
@@ -762,9 +772,17 @@ export default function LojaPage() {
                     )}
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-gray-900">
-                        {formatPrice(product.price)}
-                      </span>
+                      <div>
+                        <span className="text-xl font-bold text-gray-900">
+                          {product.isAssemblable ? "A partir de " : ""}
+                          {formatPrice(product.price)}
+                        </span>
+                        {product.isAssemblable && (
+                          <span className="ml-1 text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">
+                            Montável
+                          </span>
+                        )}
+                      </div>
                       {store.isOwner ? (
                         <Link
                           href={`/products/edit?id=${product.id}&storeId=${store.id}`}
@@ -774,7 +792,17 @@ export default function LojaPage() {
                         </Link>
                       ) : (
                         <button
-                          onClick={() => addToCart(product)}
+                          onClick={() => {
+                            if (product.isAssemblable) {
+                              if (!session) {
+                                router.push("/login");
+                                return;
+                              }
+                              setAssembleProduct(product);
+                            } else {
+                              addToCart(product);
+                            }
+                          }}
                           disabled={
                             addingToCart === product.id ||
                             !product.available ||
@@ -810,6 +838,8 @@ export default function LojaPage() {
                             "Delivery fechado"
                           ) : product.stock !== null && product.stock === 0 ? (
                             "Sem estoque"
+                          ) : product.isAssemblable ? (
+                            "Montar"
                           ) : (
                             "Adicionar"
                           )}
@@ -879,6 +909,19 @@ export default function LojaPage() {
           </Link>
         </div>
       )}
+
+      {/* Modal de produto montável */}
+      <AssemblableProductModal
+        product={assembleProduct}
+        isOpen={!!assembleProduct}
+        onClose={() => setAssembleProduct(null)}
+        onAddToCart={(data) => {
+          const prod =
+            products.find((p) => p.id === data.productId) || assembleProduct;
+          addToCart(prod, data);
+        }}
+        adding={!!addingToCart}
+      />
 
       <Footer />
     </div>
