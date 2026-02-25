@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { formatPrice, getStateDisplay } from "../../lib/utils";
@@ -805,10 +806,16 @@ export default function AdminPage() {
 
           {/* Usuários Recentes */}
           <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b">
+            <div className="p-4 border-b flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-800">
                 Usuários Recentes
               </h2>
+              <Link
+                href="/admin/users"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Ver todos →
+              </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">

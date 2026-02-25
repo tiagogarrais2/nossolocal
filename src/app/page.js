@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import InstallPWABanner from "../components/InstallPWABanner";
 
 const stateSiglas = {
   11: "RO",
@@ -130,6 +131,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <InstallPWABanner />
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white">
