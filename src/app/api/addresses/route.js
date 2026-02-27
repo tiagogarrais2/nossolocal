@@ -21,8 +21,8 @@ export async function GET() {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    // Buscar o usuário
-    const usuario = await prisma.usuario.findUnique({
+    // Buscar ou criar o usuário (perfil pode não existir ainda)
+    let usuario = await prisma.usuario.findUnique({
       where: { userId: session.user.id },
       include: {
         addresses: {
@@ -37,10 +37,10 @@ export async function GET() {
     });
 
     if (!usuario) {
-      return NextResponse.json(
-        { error: "Usuário não encontrado" },
-        { status: 404 },
-      );
+      usuario = await prisma.usuario.create({
+        data: { userId: session.user.id },
+      });
+      usuario.addresses = [];
     }
 
     return NextResponse.json({ addresses: usuario.addresses });
@@ -95,16 +95,15 @@ export async function POST(request) {
       );
     }
 
-    // Buscar o usuário
-    const usuario = await prisma.usuario.findUnique({
+    // Buscar ou criar o usuário (perfil pode não existir ainda)
+    let usuario = await prisma.usuario.findUnique({
       where: { userId: session.user.id },
     });
 
     if (!usuario) {
-      return NextResponse.json(
-        { error: "Usuário não encontrado" },
-        { status: 404 },
-      );
+      usuario = await prisma.usuario.create({
+        data: { userId: session.user.id },
+      });
     }
 
     // Se está marcando como principal, desmarcar outros endereços

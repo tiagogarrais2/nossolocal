@@ -705,6 +705,12 @@ export default function CarrinhoPage() {
                                       </p>
                                     ),
                                   )}
+                                  {item.customizations._observations && (
+                                    <p className="mt-1 italic text-gray-500">
+                                      <span className="font-medium text-gray-600">Obs:</span>{" "}
+                                      {item.customizations._observations}
+                                    </p>
+                                  )}
                                   <button
                                     onClick={() => handleEditAssemblable(item)}
                                     disabled={updating}

@@ -112,6 +112,23 @@ export default function ProductPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Verifica se o produto pode ser adicionado ao carrinho
+  const canAddToCart = product?.available && store?.isOpen && session && (product?.stock === null || product?.stock > 0);
+
+  // Ação ao clicar na imagem ou título do produto
+  const handleProductAction = () => {
+    if (!session) {
+      router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (!canAddToCart) return;
+    if (product.isAssemblable) {
+      setShowAssembleModal(true);
+    } else {
+      addToCart();
+    }
+  };
+
   // Função para adicionar ao carrinho
   const addToCart = async (customizationData = null) => {
     if (!session) {
@@ -214,7 +231,11 @@ export default function ProductPage() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="md:flex">
             {/* Product Images Carousel */}
-            <div className="md:w-1/2 relative">
+            <div
+              className="md:w-1/2 relative cursor-pointer"
+              onClick={handleProductAction}
+              title={canAddToCart ? (product.isAssemblable ? "Clique para montar o produto" : "Clique para adicionar ao carrinho") : ""}
+            >
               {product.images && product.images.length > 0 ? (
                 <div className="aspect-w-1 aspect-h-1 bg-gray-200">
                   <ProductImageCarousel
@@ -232,7 +253,11 @@ export default function ProductPage() {
 
             {/* Product Details */}
             <div className="md:w-1/2 p-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              <h1
+                className="text-3xl font-bold text-gray-900 mb-4 cursor-pointer hover:text-green-700 transition-colors"
+                onClick={handleProductAction}
+                title={canAddToCart ? (product.isAssemblable ? "Clique para montar o produto" : "Clique para adicionar ao carrinho") : ""}
+              >
                 {product.name}
               </h1>
 

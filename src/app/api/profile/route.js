@@ -100,7 +100,7 @@ export async function PUT(request) {
       where: { userId: user.id },
       update: {
         fullName,
-        birthDate: new Date(birthDate),
+        birthDate: birthDate ? new Date(birthDate) : null,
         cpf: cpfValue,
         whatsapp,
         whatsappCountryCode,
@@ -109,7 +109,7 @@ export async function PUT(request) {
       create: {
         userId: user.id,
         fullName,
-        birthDate: new Date(birthDate),
+        birthDate: birthDate ? new Date(birthDate) : null,
         cpf: cpfValue,
         whatsapp,
         whatsappCountryCode,

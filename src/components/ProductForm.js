@@ -184,8 +184,8 @@ export default function ProductForm({
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
-            rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            rows={5}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y min-h-[120px]"
             placeholder="Descreva o produto..."
           />
         </div>
@@ -874,7 +874,7 @@ export default function ProductForm({
                               };
                               setFormData({ ...formData, groups: newGroups });
                             }}
-                            className="w-28 px-2 py-1.5 border border-gray-300 rounded text-sm hidden md:block"
+                            className="w-44 lg:w-56 px-2 py-1.5 border border-gray-300 rounded text-sm hidden md:block"
                             placeholder="Descrição"
                           />
                           <div className="relative">
