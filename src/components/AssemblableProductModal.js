@@ -404,9 +404,13 @@ export default function AssemblableProductModal({
                   <h3 className="font-semibold text-gray-800 text-sm">
                     {group.name}
                     {group.required ? (
-                      <span className="text-red-500 ml-1 text-xs font-normal">(Obrigatório)</span>
+                      <span className="text-red-500 ml-1 text-xs font-normal">
+                        (Obrigatório)
+                      </span>
                     ) : (
-                      <span className="text-gray-400 ml-1 text-xs font-normal">(Opcional)</span>
+                      <span className="text-gray-400 ml-1 text-xs font-normal">
+                        (Opcional)
+                      </span>
                     )}
                   </h3>
                   <span className="text-xs text-gray-500">

@@ -113,12 +113,18 @@ export default function ProductPage() {
   }, []);
 
   // Verifica se o produto pode ser adicionado ao carrinho
-  const canAddToCart = product?.available && store?.isOpen && session && (product?.stock === null || product?.stock > 0);
+  const canAddToCart =
+    product?.available &&
+    store?.isOpen &&
+    session &&
+    (product?.stock === null || product?.stock > 0);
 
   // Ação ao clicar na imagem ou título do produto
   const handleProductAction = () => {
     if (!session) {
-      router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+      router.push(
+        `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`,
+      );
       return;
     }
     if (!canAddToCart) return;
@@ -234,7 +240,13 @@ export default function ProductPage() {
             <div
               className="md:w-1/2 relative cursor-pointer"
               onClick={handleProductAction}
-              title={canAddToCart ? (product.isAssemblable ? "Clique para montar o produto" : "Clique para adicionar ao carrinho") : ""}
+              title={
+                canAddToCart
+                  ? product.isAssemblable
+                    ? "Clique para montar o produto"
+                    : "Clique para adicionar ao carrinho"
+                  : ""
+              }
             >
               {product.images && product.images.length > 0 ? (
                 <div className="aspect-w-1 aspect-h-1 bg-gray-200">
@@ -256,7 +268,13 @@ export default function ProductPage() {
               <h1
                 className="text-3xl font-bold text-gray-900 mb-4 cursor-pointer hover:text-green-700 transition-colors"
                 onClick={handleProductAction}
-                title={canAddToCart ? (product.isAssemblable ? "Clique para montar o produto" : "Clique para adicionar ao carrinho") : ""}
+                title={
+                  canAddToCart
+                    ? product.isAssemblable
+                      ? "Clique para montar o produto"
+                      : "Clique para adicionar ao carrinho"
+                    : ""
+                }
               >
                 {product.name}
               </h1>
