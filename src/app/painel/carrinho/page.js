@@ -689,8 +689,9 @@ export default function CarrinhoPage() {
                               typeof item.customizations === "object" &&
                               Object.keys(item.customizations).length > 0 && (
                                 <div className="text-xs text-gray-500 mb-2 space-y-0.5">
-                                  {Object.values(item.customizations).map(
-                                    (group, idx) => (
+                                  {Object.entries(item.customizations)
+                                    .filter(([key, val]) => key !== "_observations" && val?.selected)
+                                    .map(([key, group], idx) => (
                                       <p key={idx}>
                                         <span className="font-medium text-gray-600">
                                           {group.groupName}:
@@ -703,8 +704,7 @@ export default function CarrinhoPage() {
                                           )
                                           .join(", ")}
                                       </p>
-                                    ),
-                                  )}
+                                    ))}
                                   {item.customizations._observations && (
                                     <p className="mt-1 italic text-gray-500">
                                       <span className="font-medium text-gray-600">Obs:</span>{" "}
