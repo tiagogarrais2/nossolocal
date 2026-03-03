@@ -655,19 +655,42 @@ export default function SalesLogsPage() {
                     })().map((item, index) => (
                       <div
                         key={index}
-                        className="flex justify-between items-center text-sm bg-white p-2 rounded"
+                        className="text-sm bg-white p-2 rounded"
                       >
-                        <div>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="font-medium">
+                              {item.productName || "Produto não especificado"}
+                            </span>
+                            <span className="text-gray-500 ml-2">
+                              x{item.quantity}
+                            </span>
+                          </div>
                           <span className="font-medium">
-                            {item.productName || "Produto não especificado"}
-                          </span>
-                          <span className="text-gray-500 ml-2">
-                            x{item.quantity}
+                            {formatPrice(item.price * item.quantity)}
                           </span>
                         </div>
-                        <span className="font-medium">
-                          {formatPrice(item.price * item.quantity)}
-                        </span>
+                        {/* Customizações e observações */}
+                        {item.customizations && typeof item.customizations === "object" && (
+                          <div className="text-xs text-gray-500 mt-1 ml-2 space-y-0.5">
+                            {Object.entries(item.customizations)
+                              .filter(([key, val]) => key !== "_observations" && val?.selected)
+                              .map(([key, group], idx) => (
+                                <p key={idx}>
+                                  <span className="font-medium text-gray-600">{group.groupName}:</span>{" "}
+                                  {group.selected.map((sel) =>
+                                    group.type === "quantity" ? `${sel.quantity}x ${sel.name}` : sel.name
+                                  ).join(", ")}
+                                </p>
+                              ))}
+                            {item.customizations._observations && (
+                              <p className="mt-1 italic text-amber-700">
+                                <span className="font-medium">📝 Obs:</span>{" "}
+                                {item.customizations._observations}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

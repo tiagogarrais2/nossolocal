@@ -228,21 +228,32 @@ export async function sendOrderNotificationToStore({
 
   const itemsHtml = order.items
     .map(
-      (item) =>
-        `<tr>
-      <td style="padding: 8px; border-bottom: 1px solid #eee;">${
-        item.productName
-      }</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${
-        item.quantity
-      }</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(
-        item.price,
-      )}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(
-        item.price * item.quantity,
-      )}</td>
-    </tr>`,
+      (item) => {
+        // Build customizations detail for email
+        let customizationsHtml = "";
+        if (item.customizations && typeof item.customizations === "object") {
+          const groups = Object.entries(item.customizations)
+            .filter(([key, val]) => key !== "_observations" && val?.selected)
+            .map(([key, group]) => {
+              const selections = group.selected.map((sel) =>
+                group.type === "quantity" ? `${sel.quantity}x ${sel.name}` : sel.name
+              ).join(", ");
+              return `<strong>${group.groupName}:</strong> ${selections}`;
+            });
+          if (groups.length > 0) {
+            customizationsHtml += `<div style="font-size: 12px; color: #666; margin-top: 4px;">${groups.join("<br/>")}</div>`;
+          }
+          if (item.customizations._observations) {
+            customizationsHtml += `<div style="font-size: 12px; color: #b45309; font-style: italic; margin-top: 4px; background-color: #fffbeb; padding: 4px 8px; border-radius: 4px;">📝 Obs: ${item.customizations._observations}</div>`;
+          }
+        }
+        return `<tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.productName}${customizationsHtml}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.price)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.price * item.quantity)}</td>
+    </tr>`;
+      }
     )
     .join("");
 

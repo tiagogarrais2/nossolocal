@@ -310,15 +310,36 @@ export default function MinhasComprasPage() {
                               key={index}
                               className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
                             >
-                              <div>
+                              <div className="flex-1">
                                 <p className="font-medium text-gray-900">
                                   {item.productName}
                                 </p>
                                 <p className="text-sm text-gray-600">
                                   {item.quantity}x {formatPrice(item.price)}
                                 </p>
+                                {/* Customizações e observações */}
+                                {item.customizations && typeof item.customizations === "object" && (
+                                  <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                                    {Object.entries(item.customizations)
+                                      .filter(([key, val]) => key !== "_observations" && val?.selected)
+                                      .map(([key, group], idx) => (
+                                        <p key={idx}>
+                                          <span className="font-medium text-gray-600">{group.groupName}:</span>{" "}
+                                          {group.selected.map((sel) =>
+                                            group.type === "quantity" ? `${sel.quantity}x ${sel.name}` : sel.name
+                                          ).join(", ")}
+                                        </p>
+                                      ))}
+                                    {item.customizations._observations && (
+                                      <p className="mt-1 italic text-gray-600">
+                                        <span className="font-medium">📝 Obs:</span>{" "}
+                                        {item.customizations._observations}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 whitespace-nowrap">
                                 {formatPrice(item.price * item.quantity)}
                               </p>
                             </div>
