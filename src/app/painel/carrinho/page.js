@@ -32,6 +32,8 @@ export default function CarrinhoPage() {
   const errorTimeoutRef = useRef(null);
   const [editingCartItem, setEditingCartItem] = useState(null);
   const [editModalAdding, setEditModalAdding] = useState(false);
+  const [editingObsItemId, setEditingObsItemId] = useState(null);
+  const [editingObsText, setEditingObsText] = useState("");
 
   // Mostrar erros com toast e scroll automático
   useEffect(() => {
@@ -222,6 +224,77 @@ export default function CarrinhoPage() {
   const handleEditAssemblable = (item) => {
     if (!item.customizations || !item.product?.groups?.length) return;
     setEditingCartItem(item);
+  };
+
+  // Iniciar edição de observações de qualquer item
+  const handleEditObservations = (item) => {
+    setEditingObsItemId(item.id);
+    setEditingObsText(
+      (item.customizations && item.customizations._observations) || "",
+    );
+  };
+
+  // Salvar observações editadas (DELETE + POST para atualizar customizations/hash)
+  const handleSaveObservations = async (item) => {
+    const newObs = editingObsText.trim();
+    const oldObs =
+      (item.customizations && item.customizations._observations) || "";
+    if (newObs === oldObs) {
+      setEditingObsItemId(null);
+      return;
+    }
+    try {
+      setUpdating(true);
+      // Build new customizations
+      let newCustomizations = item.customizations
+        ? { ...item.customizations }
+        : {};
+      if (newObs) {
+        newCustomizations._observations = newObs;
+      } else {
+        delete newCustomizations._observations;
+      }
+      // If empty object, set to null
+      const hasKeys = Object.keys(newCustomizations).length > 0;
+      const customPayload = hasKeys ? newCustomizations : null;
+      const hashPayload = hasKeys
+        ? computeCustomizationHash(newCustomizations)
+        : "";
+
+      // 1. Remove old item
+      const delRes = await fetch(`/api/cart/${item.id}`, { method: "DELETE" });
+      if (!delRes.ok) {
+        const err = await delRes.json();
+        setErrors([err.error || "Erro ao atualizar observações"]);
+        setUpdating(false);
+        return;
+      }
+      // 2. Add new item with updated customizations
+      const addRes = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: item.product.id,
+          quantity: item.quantity,
+          customizations: customPayload,
+          customizationHash: hashPayload,
+        }),
+      });
+      if (!addRes.ok) {
+        const err = await addRes.json();
+        setErrors([err.error || "Erro ao atualizar observações"]);
+      } else {
+        setSuccessMessage("Observações atualizadas!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+      }
+      await fetchCart();
+    } catch (error) {
+      console.error("Erro ao salvar observações:", error);
+      setErrors(["Erro ao atualizar observações"]);
+    } finally {
+      setUpdating(false);
+      setEditingObsItemId(null);
+    }
   };
 
   // Callback quando o modal de edição confirma
@@ -709,23 +782,71 @@ export default function CarrinhoPage() {
                                           .join(", ")}
                                       </p>
                                     ))}
-                                  {item.customizations._observations && (
-                                    <p className="mt-1 italic text-gray-500">
-                                      <span className="font-medium text-gray-600">
-                                        Obs:
-                                      </span>{" "}
-                                      {item.customizations._observations}
-                                    </p>
+                                  {item.product?.groups?.length > 0 && (
+                                    <button
+                                      onClick={() => handleEditAssemblable(item)}
+                                      disabled={updating}
+                                      className="mt-1 text-xs text-purple-600 hover:text-purple-800 font-medium underline disabled:opacity-50"
+                                    >
+                                      ✏️ Editar montagem
+                                    </button>
                                   )}
-                                  <button
-                                    onClick={() => handleEditAssemblable(item)}
-                                    disabled={updating}
-                                    className="mt-1 text-xs text-purple-600 hover:text-purple-800 font-medium underline disabled:opacity-50"
-                                  >
-                                    ✏️ Editar montagem
-                                  </button>
                                 </div>
                               )}
+
+                            {/* Observações - exibição e edição inline para todos os itens */}
+                            {editingObsItemId === item.id ? (
+                              <div className="mt-2 space-y-2">
+                                <textarea
+                                  value={editingObsText}
+                                  onChange={(e) => setEditingObsText(e.target.value)}
+                                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                  rows={2}
+                                  maxLength={500}
+                                  placeholder="Ex: sem cebola, ponto da carne..."
+                                  autoFocus
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleSaveObservations(item)}
+                                    disabled={updating}
+                                    className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
+                                  >
+                                    Salvar
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingObsItemId(null)}
+                                    className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="mt-1">
+                                {item.customizations?._observations ? (
+                                  <p className="text-xs italic text-gray-500">
+                                    <span className="font-medium text-gray-600">Obs:</span>{" "}
+                                    {item.customizations._observations}
+                                    <button
+                                      onClick={() => handleEditObservations(item)}
+                                      disabled={updating}
+                                      className="ml-2 text-blue-600 hover:text-blue-800 underline disabled:opacity-50"
+                                    >
+                                      editar
+                                    </button>
+                                  </p>
+                                ) : (
+                                  <button
+                                    onClick={() => handleEditObservations(item)}
+                                    disabled={updating}
+                                    className="text-xs text-blue-600 hover:text-blue-800 underline disabled:opacity-50"
+                                  >
+                                    📝 Adicionar observação
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-3">

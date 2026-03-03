@@ -216,7 +216,8 @@ export default function ProductForm({
         </div>
         {formData.priceOnRequest && (
           <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-            O cliente não poderá adicionar ao carrinho. Em vez disso, será direcionado para entrar em contato com a loja via WhatsApp.
+            O cliente não poderá adicionar ao carrinho. Em vez disso, será
+            direcionado para entrar em contato com a loja via WhatsApp.
           </p>
         )}
 
