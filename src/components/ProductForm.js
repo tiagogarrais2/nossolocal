@@ -45,6 +45,7 @@ export default function ProductForm({
     name: initialData?.name || "",
     description: initialData?.description || "",
     price: initialData?.price?.toString() || "",
+    priceOnRequest: initialData?.priceOnRequest || false,
     images: initialData?.images || [],
     available: initialData?.available ?? true,
     stock: initialData?.stock?.toString() || "",
@@ -61,6 +62,7 @@ export default function ProductForm({
         name: initialData.name || "",
         description: initialData.description || "",
         price: initialData.price?.toString() || "",
+        priceOnRequest: initialData.priceOnRequest || false,
         images: initialData.images || [],
         available: initialData.available ?? true,
         stock: initialData?.stock?.toString() || "",
@@ -190,28 +192,58 @@ export default function ProductForm({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {formData.isAssemblable ? "Preço Base (R$)" : "Preço (R$) *"}
-          </label>
-          {formData.isAssemblable && (
-            <p className="text-xs text-gray-500 mb-1">
-              Opcional para montáveis — o preço pode vir das opções
-            </p>
-          )}
+        {/* Preço à combinar */}
+        <div className="flex items-center">
           <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.price}
+            type="checkbox"
+            id="priceOnRequest"
+            checked={formData.priceOnRequest}
             onChange={(e) =>
-              setFormData({ ...formData, price: e.target.value })
+              setFormData({
+                ...formData,
+                priceOnRequest: e.target.checked,
+                price: e.target.checked ? "0" : formData.price,
+              })
             }
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="0.00"
-            required={!formData.isAssemblable}
+            className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
           />
+          <label
+            htmlFor="priceOnRequest"
+            className="ml-2 block text-sm text-gray-900"
+          >
+            💬 Preço à combinar (sob consulta)
+          </label>
         </div>
+        {formData.priceOnRequest && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            O cliente não poderá adicionar ao carrinho. Em vez disso, será direcionado para entrar em contato com a loja via WhatsApp.
+          </p>
+        )}
+
+        {!formData.priceOnRequest && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {formData.isAssemblable ? "Preço Base (R$)" : "Preço (R$) *"}
+            </label>
+            {formData.isAssemblable && (
+              <p className="text-xs text-gray-500 mb-1">
+                Opcional para montáveis — o preço pode vir das opções
+              </p>
+            )}
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="0.00"
+              required={!formData.isAssemblable}
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -53,6 +53,7 @@ export async function PUT(request, { params }) {
       name,
       description,
       price,
+      priceOnRequest,
       images,
       available,
       stock,
@@ -65,7 +66,7 @@ export async function PUT(request, { params }) {
     if (!name || name.trim().length === 0) {
       errors.push("Nome do produto é obrigatório");
     }
-    if (!price || isNaN(price) || parseFloat(price) < 0) {
+    if (!priceOnRequest && (!price || isNaN(price) || parseFloat(price) < 0)) {
       errors.push("Preço válido é obrigatório");
     }
 
@@ -103,7 +104,8 @@ export async function PUT(request, { params }) {
         data: {
           name: name.trim(),
           description: description?.trim() || null,
-          price: parseFloat(price),
+          price: parseFloat(price) || 0,
+          priceOnRequest: priceOnRequest || false,
           images: images || [],
           available: available === true,
           stock:

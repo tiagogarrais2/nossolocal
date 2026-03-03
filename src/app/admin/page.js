@@ -27,6 +27,16 @@ export default function AdminPage() {
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
   const [testEmailResult, setTestEmailResult] = useState(null);
 
+  // Backup e Restauração
+  const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [restoreFile, setRestoreFile] = useState(null);
+  const [restoreFileInfo, setRestoreFileInfo] = useState(null);
+  const [restoreConfirmText, setRestoreConfirmText] = useState("");
+  const [backupResult, setBackupResult] = useState(null);
+  const [restoreResult, setRestoreResult] = useState(null);
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
@@ -147,6 +157,124 @@ export default function AdminPage() {
       });
     } finally {
       setSendingTestEmail(false);
+    }
+  };
+
+  const handleBackup = async () => {
+    setBackingUp(true);
+    setBackupResult(null);
+    try {
+      const response = await fetch("/api/admin/backup");
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Erro ao gerar backup");
+      }
+      // Baixar o arquivo
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const disposition = response.headers.get("Content-Disposition");
+      const filename = disposition
+        ? disposition.split("filename=")[1]?.replace(/"/g, "")
+        : `backup-nossolocal-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setBackupResult({
+        success: true,
+        message: `Backup baixado com sucesso: ${filename}`,
+      });
+    } catch (err) {
+      console.error("Erro ao gerar backup:", err);
+      setBackupResult({
+        success: false,
+        message: err.message || "Erro ao gerar backup",
+      });
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+  const handleRestoreFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        if (!parsed.metadata || !parsed.data) {
+          alert(
+            "Arquivo inválido: não contém os campos obrigatórios (metadata, data).",
+          );
+          return;
+        }
+        if (parsed.metadata.generator !== "nossolocal-admin-backup") {
+          alert(
+            "Arquivo não reconhecido. Selecione um arquivo gerado pelo sistema de backup.",
+          );
+          return;
+        }
+        setRestoreFile(event.target.result);
+        setRestoreFileInfo({
+          fileName: file.name,
+          date: parsed.metadata.date,
+          tableCount: parsed.metadata.tableCount,
+          totalRows: parsed.metadata.totalRows,
+          tables: parsed.metadata.tables,
+        });
+        setRestoreConfirmText("");
+        setShowRestoreModal(true);
+      } catch (parseErr) {
+        alert("Erro ao ler o arquivo. Certifique-se de que é um JSON válido.");
+      }
+    };
+    reader.readAsText(file);
+    // Limpar o input para permitir selecionar o mesmo arquivo novamente
+    e.target.value = "";
+  };
+
+  const handleRestore = async () => {
+    if (restoreConfirmText !== "RESTAURAR") return;
+
+    setRestoring(true);
+    setRestoreResult(null);
+    try {
+      const response = await fetch("/api/admin/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: restoreFile,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao restaurar backup");
+      }
+
+      setShowRestoreModal(false);
+      setRestoreFile(null);
+      setRestoreFileInfo(null);
+      setRestoreConfirmText("");
+      setRestoreResult({
+        success: true,
+        message: `Restauração concluída! ${result.tablesRestored} tabelas restauradas com ${result.totalRowsRestored} registros.${result.warnings?.length ? " Avisos: " + result.warnings.join("; ") : ""}`,
+      });
+
+      // Recarregar dados do painel
+      fetchAdminData();
+    } catch (err) {
+      console.error("Erro ao restaurar backup:", err);
+      setRestoreResult({
+        success: false,
+        message: err.message || "Erro ao restaurar backup",
+      });
+      setShowRestoreModal(false);
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -520,6 +648,230 @@ export default function AdminPage() {
                 </span>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Seção de Backup e Restauração */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+              <svg
+                className="w-6 h-6 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+                />
+              </svg>
+              Backup e Restauração do Banco de Dados
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Exporte todos os dados do banco como JSON ou restaure a partir de
+              um backup anterior. A exportação e restauração conectam
+              diretamente ao PostgreSQL (Neon).
+            </p>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Botão de Backup */}
+              <button
+                onClick={handleBackup}
+                disabled={backingUp}
+                className={`flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition shadow-md font-medium ${
+                  backingUp ? "opacity-50 cursor-wait" : ""
+                }`}
+              >
+                {backingUp ? (
+                  <svg
+                    className="animate-spin h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                )}
+                <span>
+                  {backingUp ? "Gerando backup..." : "Backup do Banco"}
+                </span>
+              </button>
+
+              {/* Botão de Restaurar */}
+              <label
+                className={`flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition shadow-md font-medium cursor-pointer ${
+                  restoring ? "opacity-50 cursor-wait" : ""
+                }`}
+              >
+                {restoring ? (
+                  <svg
+                    className="animate-spin h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                    />
+                  </svg>
+                )}
+                <span>{restoring ? "Restaurando..." : "Restaurar Banco"}</span>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleRestoreFileSelect}
+                  className="hidden"
+                  disabled={restoring}
+                />
+              </label>
+            </div>
+
+            {/* Resultado do Backup */}
+            {backupResult && (
+              <div
+                className={`p-4 rounded-md ${backupResult.success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}
+              >
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    {backupResult.success ? (
+                      <svg
+                        className="h-5 w-5 text-green-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="h-5 w-5 text-red-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="ml-3">
+                    <p
+                      className={`text-sm font-medium ${backupResult.success ? "text-green-800" : "text-red-800"}`}
+                    >
+                      {backupResult.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Resultado da Restauração */}
+            {restoreResult && (
+              <div
+                className={`p-4 rounded-md ${restoreResult.success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}
+              >
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    {restoreResult.success ? (
+                      <svg
+                        className="h-5 w-5 text-green-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="h-5 w-5 text-red-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="ml-3">
+                    <p
+                      className={`text-sm font-medium ${restoreResult.success ? "text-green-800" : "text-red-800"}`}
+                    >
+                      {restoreResult.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500">
+              O backup exporta todas as tabelas do banco como JSON. A
+              restauração substitui <strong>todos</strong> os dados atuais pelos
+              dados do backup. Em caso de erro durante a restauração, o banco
+              permanece intacto (rollback automático).
+            </p>
           </div>
         </div>
 
@@ -912,6 +1264,163 @@ export default function AdminPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Modal de Confirmação de Restauração */}
+      {showRestoreModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => {
+            setShowRestoreModal(false);
+            setRestoreFile(null);
+            setRestoreFileInfo(null);
+            setRestoreConfirmText("");
+          }}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setShowRestoreModal(false);
+                setRestoreFile(null);
+                setRestoreFileInfo(null);
+                setRestoreConfirmText("");
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            >
+              &times;
+            </button>
+
+            {/* Ícone de alerta */}
+            <div className="flex justify-center mb-4">
+              <div className="p-3 rounded-full bg-red-100">
+                <svg
+                  className="w-10 h-10 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+              Confirmar Restauração
+            </h3>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-red-800 font-medium">
+                Esta ação irá <strong>APAGAR todos os dados atuais</strong> e
+                substituir pelos dados do backup. Esta operação é irreversível.
+              </p>
+            </div>
+
+            {/* Info do arquivo */}
+            {restoreFileInfo && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Arquivo:</span>
+                  <span className="font-medium text-gray-900 truncate ml-2">
+                    {restoreFileInfo.fileName}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Data do backup:</span>
+                  <span className="font-medium text-gray-900">
+                    {new Date(restoreFileInfo.date).toLocaleString("pt-BR")}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tabelas:</span>
+                  <span className="font-medium text-gray-900">
+                    {restoreFileInfo.tableCount}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total de registros:</span>
+                  <span className="font-medium text-gray-900">
+                    {restoreFileInfo.totalRows?.toLocaleString("pt-BR")}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Campo de confirmação */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Digite <strong className="text-red-600">RESTAURAR</strong> para
+                confirmar:
+              </label>
+              <input
+                type="text"
+                value={restoreConfirmText}
+                onChange={(e) => setRestoreConfirmText(e.target.value)}
+                placeholder="RESTAURAR"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-center font-mono text-lg"
+                autoFocus
+              />
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRestoreModal(false);
+                  setRestoreFile(null);
+                  setRestoreFileInfo(null);
+                  setRestoreConfirmText("");
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleRestore}
+                disabled={restoreConfirmText !== "RESTAURAR" || restoring}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition flex items-center justify-center space-x-2 ${
+                  restoreConfirmText === "RESTAURAR" && !restoring
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {restoring ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Restaurando...</span>
+                  </>
+                ) : (
+                  <span>Restaurar</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

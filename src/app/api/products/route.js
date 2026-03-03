@@ -93,6 +93,7 @@ export async function POST(request) {
       name,
       description,
       price,
+      priceOnRequest,
       images,
       available,
       stock,
@@ -109,7 +110,9 @@ export async function POST(request) {
       errors.push("Nome do produto é obrigatório");
     }
     if (price === undefined || price === null || price === "") {
-      errors.push("Preço é obrigatório");
+      if (!priceOnRequest) {
+        errors.push("Preço é obrigatório");
+      }
     } else if (isNaN(parseFloat(price))) {
       errors.push("Preço deve ser um número válido");
     }
@@ -151,7 +154,8 @@ export async function POST(request) {
           storeId,
           name: name.trim(),
           description: description?.trim() || null,
-          price: parseFloat(price.toString().replace(",", ".")),
+          price: parseFloat(price.toString().replace(",", ".")) || 0,
+          priceOnRequest: priceOnRequest || false,
           images: images || [],
           available: available !== undefined ? available : true,
           stock:

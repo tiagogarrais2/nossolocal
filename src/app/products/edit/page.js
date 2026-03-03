@@ -65,6 +65,7 @@ function EditProductPageContent() {
               name: product.name,
               description: product.description || "",
               price: product.price,
+              priceOnRequest: product.priceOnRequest || false,
               images: product.images || [],
               available: product.available,
               stock: product.stock,

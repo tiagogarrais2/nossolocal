@@ -118,6 +118,13 @@ export async function POST(request) {
       );
     }
 
+    if (product.priceOnRequest) {
+      return NextResponse.json(
+        { error: "Este produto tem preço sob consulta. Entre em contato com a loja para solicitar um orçamento." },
+        { status: 400 },
+      );
+    }
+
     if (!product.store.isOpen) {
       return NextResponse.json(
         {

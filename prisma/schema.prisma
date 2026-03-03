@@ -177,6 +177,7 @@ model Product {
   available     Boolean @default(true)
   stock         Int?     // Quantidade disponível em estoque (opcional - null = ilimitado)
   isAssemblable Boolean @default(false) // Produto montável (marmita, pizza, açaí...)
+  priceOnRequest Boolean @default(false) // Preço à combinar (sob consulta)
 
   store     Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
