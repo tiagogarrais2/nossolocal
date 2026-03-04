@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { canManageStore } from "@/lib/permissions";
+import { canManageStore, isUserAdmin } from "@/lib/permissions";
 
 export async function PUT(request, { params }) {
   try {
@@ -41,6 +41,7 @@ export async function PUT(request, { params }) {
       freeShippingThreshold,
       neighborhoodDeliveryFees,
       address,
+      ownerId,
     } = body;
 
     const errors = [];
@@ -135,6 +136,29 @@ export async function PUT(request, { params }) {
       );
     }
 
+    // Validar transferência de propriedade
+    let newOwnerId = null;
+    if (ownerId && ownerId !== existingStore.userId) {
+      if (!isUserAdmin(session)) {
+        return NextResponse.json(
+          {
+            errors: [
+              "Apenas administradores podem transferir a propriedade de uma loja",
+            ],
+          },
+          { status: 403 },
+        );
+      }
+      const newOwner = await prisma.user.findUnique({
+        where: { id: ownerId },
+      });
+      if (!newOwner) {
+        errors.push("Usuário destino da transferência não encontrado");
+      } else {
+        newOwnerId = ownerId;
+      }
+    }
+
     if (errors.length > 0) {
       return NextResponse.json({ errors }, { status: 400 });
     }
@@ -145,6 +169,7 @@ export async function PUT(request, { params }) {
     const store = await prisma.store.update({
       where: { id },
       data: {
+        ...(newOwnerId && { userId: newOwnerId }),
         name: name.trim(),
         description: description?.trim() || null,
         image: image?.trim() || null,
