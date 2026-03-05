@@ -733,7 +733,9 @@ function ProfileContent() {
                         {formData.birthDate
                           ? new Date(
                               formData.birthDate + "T00:00:00",
-                            ).toLocaleDateString("pt-BR")
+                            ).toLocaleDateString("pt-BR", {
+                              timeZone: "America/Sao_Paulo",
+                            })
                           : "Não informado"}
                       </p>
                     </div>
@@ -1041,9 +1043,11 @@ function ProfileContent() {
 
                       <div className="grid md:grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-600">
-                            <strong>CNPJ:</strong> {store.cnpj}
-                          </p>
+                          {store.cnpj && (
+                            <p className="text-gray-600">
+                              <strong>CNPJ:</strong> {store.cnpj}
+                            </p>
+                          )}
                           <p className="text-gray-600">
                             <strong>Telefone:</strong> {store.phone}
                           </p>

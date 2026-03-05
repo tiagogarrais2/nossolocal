@@ -141,6 +141,7 @@ export default function SalesLogsPage() {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -570,12 +571,14 @@ export default function SalesLogsPage() {
                           {selectedLog.storePhone}
                         </span>
                       </p>
-                      <p>
-                        <span className="text-gray-500">CNPJ:</span>{" "}
-                        <span className="font-medium">
-                          {selectedLog.storeCnpj}
-                        </span>
-                      </p>
+                      {selectedLog.storeCnpj && (
+                        <p>
+                          <span className="text-gray-500">CNPJ:</span>{" "}
+                          <span className="font-medium">
+                            {selectedLog.storeCnpj}
+                          </span>
+                        </p>
+                      )}
                       <p>
                         <span className="text-gray-500">Categoria:</span>{" "}
                         <span className="font-medium">
@@ -653,10 +656,7 @@ export default function SalesLogsPage() {
                       }
                       return Array.isArray(items) ? items : [];
                     })().map((item, index) => (
-                      <div
-                        key={index}
-                        className="text-sm bg-white p-2 rounded"
-                      >
+                      <div key={index} className="text-sm bg-white p-2 rounded">
                         <div className="flex justify-between items-center">
                           <div>
                             <span className="font-medium">
@@ -671,26 +671,36 @@ export default function SalesLogsPage() {
                           </span>
                         </div>
                         {/* Customizações e observações */}
-                        {item.customizations && typeof item.customizations === "object" && (
-                          <div className="text-xs text-gray-500 mt-1 ml-2 space-y-0.5">
-                            {Object.entries(item.customizations)
-                              .filter(([key, val]) => key !== "_observations" && val?.selected)
-                              .map(([key, group], idx) => (
-                                <p key={idx}>
-                                  <span className="font-medium text-gray-600">{group.groupName}:</span>{" "}
-                                  {group.selected.map((sel) =>
-                                    group.type === "quantity" ? `${sel.quantity}x ${sel.name}` : sel.name
-                                  ).join(", ")}
+                        {item.customizations &&
+                          typeof item.customizations === "object" && (
+                            <div className="text-xs text-gray-500 mt-1 ml-2 space-y-0.5">
+                              {Object.entries(item.customizations)
+                                .filter(
+                                  ([key, val]) =>
+                                    key !== "_observations" && val?.selected,
+                                )
+                                .map(([key, group], idx) => (
+                                  <p key={idx}>
+                                    <span className="font-medium text-gray-600">
+                                      {group.groupName}:
+                                    </span>{" "}
+                                    {group.selected
+                                      .map((sel) =>
+                                        group.type === "quantity"
+                                          ? `${sel.quantity}x ${sel.name}`
+                                          : sel.name,
+                                      )
+                                      .join(", ")}
+                                  </p>
+                                ))}
+                              {item.customizations._observations && (
+                                <p className="mt-1 italic text-amber-700">
+                                  <span className="font-medium">📝 Obs:</span>{" "}
+                                  {item.customizations._observations}
                                 </p>
-                              ))}
-                            {item.customizations._observations && (
-                              <p className="mt-1 italic text-amber-700">
-                                <span className="font-medium">📝 Obs:</span>{" "}
-                                {item.customizations._observations}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                              )}
+                            </div>
+                          )}
                       </div>
                     ))}
                   </div>

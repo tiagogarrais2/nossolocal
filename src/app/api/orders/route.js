@@ -162,8 +162,13 @@ export async function POST(request) {
     // Converter valores numéricos para número se forem strings
     subtotal = typeof subtotal === "string" ? parseFloat(subtotal) : subtotal;
     total = typeof total === "string" ? parseFloat(total) : total;
-    deliveryFee = typeof deliveryFee === "string" ? parseFloat(deliveryFee) : deliveryFee;
-    changeAmount = changeAmount ? (typeof changeAmount === "string" ? parseFloat(changeAmount) : changeAmount) : null;
+    deliveryFee =
+      typeof deliveryFee === "string" ? parseFloat(deliveryFee) : deliveryFee;
+    changeAmount = changeAmount
+      ? typeof changeAmount === "string"
+        ? parseFloat(changeAmount)
+        : changeAmount
+      : null;
 
     const errors = [];
 
@@ -335,7 +340,7 @@ export async function POST(request) {
           storeName: store.name,
           storeEmail: store.email,
           storePhone: store.phone,
-          storeCnpj: store.cnpj,
+          storeCnpj: store.cnpj || null,
           storeCategory: store.category,
           storeAddress: storeAddress,
           deliveryAddress: formattedDeliveryAddress,

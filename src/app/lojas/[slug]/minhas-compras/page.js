@@ -227,6 +227,7 @@ export default function MinhasComprasPage() {
                             {new Date(order.createdAt).toLocaleDateString(
                               "pt-BR",
                               {
+                                timeZone: "America/Sao_Paulo",
                                 day: "2-digit",
                                 month: "2-digit",
                                 year: "numeric",
@@ -318,26 +319,39 @@ export default function MinhasComprasPage() {
                                   {item.quantity}x {formatPrice(item.price)}
                                 </p>
                                 {/* Customizações e observações */}
-                                {item.customizations && typeof item.customizations === "object" && (
-                                  <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                                    {Object.entries(item.customizations)
-                                      .filter(([key, val]) => key !== "_observations" && val?.selected)
-                                      .map(([key, group], idx) => (
-                                        <p key={idx}>
-                                          <span className="font-medium text-gray-600">{group.groupName}:</span>{" "}
-                                          {group.selected.map((sel) =>
-                                            group.type === "quantity" ? `${sel.quantity}x ${sel.name}` : sel.name
-                                          ).join(", ")}
+                                {item.customizations &&
+                                  typeof item.customizations === "object" && (
+                                    <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                                      {Object.entries(item.customizations)
+                                        .filter(
+                                          ([key, val]) =>
+                                            key !== "_observations" &&
+                                            val?.selected,
+                                        )
+                                        .map(([key, group], idx) => (
+                                          <p key={idx}>
+                                            <span className="font-medium text-gray-600">
+                                              {group.groupName}:
+                                            </span>{" "}
+                                            {group.selected
+                                              .map((sel) =>
+                                                group.type === "quantity"
+                                                  ? `${sel.quantity}x ${sel.name}`
+                                                  : sel.name,
+                                              )
+                                              .join(", ")}
+                                          </p>
+                                        ))}
+                                      {item.customizations._observations && (
+                                        <p className="mt-1 italic text-gray-600">
+                                          <span className="font-medium">
+                                            📝 Obs:
+                                          </span>{" "}
+                                          {item.customizations._observations}
                                         </p>
-                                      ))}
-                                    {item.customizations._observations && (
-                                      <p className="mt-1 italic text-gray-600">
-                                        <span className="font-medium">📝 Obs:</span>{" "}
-                                        {item.customizations._observations}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
+                                      )}
+                                    </div>
+                                  )}
                               </div>
                               <p className="font-semibold text-gray-900 whitespace-nowrap">
                                 {formatPrice(item.price * item.quantity)}

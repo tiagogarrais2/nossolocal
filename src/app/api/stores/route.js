@@ -218,9 +218,6 @@ export async function POST(request) {
     if (!category || category.trim() === "") {
       errors.push("Categoria é obrigatória");
     }
-    if (!cnpj || cnpj.trim() === "") {
-      errors.push("CNPJ é obrigatório");
-    }
     if (!phone || phone.trim() === "") {
       errors.push("Telefone é obrigatório");
     }
@@ -263,7 +260,7 @@ export async function POST(request) {
       name: name.trim(),
       slug: slug.trim(),
       category: category.trim(),
-      cnpj: cnpj.trim(),
+      cnpj: cnpj?.trim() || null,
       phone: phone.trim(),
       email: email.trim(),
       street: address.street.trim(),
@@ -284,7 +281,7 @@ export async function POST(request) {
         description: description?.trim() || null,
         image: image?.trim() || null,
         category: category.trim(),
-        cnpj: cnpj.trim(),
+        cnpj: cnpj?.trim() || null,
         phone: phone.trim(),
         email: email.trim(),
         minimumOrder: minimumOrder || null,
@@ -452,9 +449,6 @@ export async function PUT(request) {
     if (!category || category.trim() === "") {
       errors.push("Categoria é obrigatória");
     }
-    if (!cnpj || cnpj.trim() === "") {
-      errors.push("CNPJ é obrigatório");
-    }
     if (!phone || phone.trim() === "") {
       errors.push("Telefone é obrigatório");
     }
@@ -509,7 +503,7 @@ export async function PUT(request) {
       description: description?.trim() || null,
       image: image?.trim() || null,
       category: category.trim(),
-      cnpj: cnpj.trim(),
+      cnpj: cnpj?.trim() || null,
       phone: phone.trim(),
       email: email.trim(),
       minimumOrder: minimumOrder || null,

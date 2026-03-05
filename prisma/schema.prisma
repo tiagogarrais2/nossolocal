@@ -121,7 +121,7 @@ model Store {
   slug        String? @unique
   description String?
   category    String
-  cnpj        String  @unique
+  cnpj        String? @unique
   phone       String
   email       String
   image       String? // URL da imagem da loja
@@ -318,7 +318,7 @@ model SalesLog {
   storeName       String
   storeEmail      String
   storePhone      String
-  storeCnpj       String
+  storeCnpj       String?
   storeCategory   String
   storeAddress    String   // Endereço completo da loja
   

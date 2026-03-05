@@ -296,10 +296,10 @@ export default function StoreForm({
     let finalDeliveryFee = null;
     let finalNeighborhoodDeliveryFees = null;
 
-    if (deliveryType === 'flat') {
+    if (deliveryType === "flat") {
       finalDeliveryFee = deliveryFee ? parseFloat(deliveryFee) : null;
       finalNeighborhoodDeliveryFees = null;
-    } else if (deliveryType === 'neighborhood') {
+    } else if (deliveryType === "neighborhood") {
       finalDeliveryFee = null;
       finalNeighborhoodDeliveryFees =
         Object.keys(neighborhoodDeliveryFees).length > 0
@@ -836,7 +836,7 @@ export default function StoreForm({
         {/* CNPJ */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            CNPJ *
+            CNPJ
           </label>
           <IMaskInput
             mask="00.000.000/0000-00"
@@ -844,7 +844,6 @@ export default function StoreForm({
             onAccept={(value) => setCnpj(value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="00.000.000/0000-00"
-            required
           />
         </div>
 
@@ -932,14 +931,19 @@ export default function StoreForm({
             </label>
             <div className="space-y-4">
               {/* Opção 1: Taxa Única */}
-              <div className="border-2 rounded-lg p-4" style={{borderColor: deliveryType === 'flat' ? '#3b82f6' : '#d1d5db'}}>
+              <div
+                className="border-2 rounded-lg p-4"
+                style={{
+                  borderColor: deliveryType === "flat" ? "#3b82f6" : "#d1d5db",
+                }}
+              >
                 <div className="flex items-start gap-3">
                   <input
                     type="radio"
                     id="delivery-flat"
                     name="deliveryType"
                     value="flat"
-                    checked={deliveryType === 'flat'}
+                    checked={deliveryType === "flat"}
                     onChange={(e) => setDeliveryType(e.target.value)}
                     className="mt-1 w-4 h-4 text-blue-600 cursor-pointer"
                   />
@@ -956,7 +960,7 @@ export default function StoreForm({
                   </div>
                 </div>
 
-                {deliveryType === 'flat' && (
+                {deliveryType === "flat" && (
                   <div className="mt-4 ml-7 pt-4 border-t border-gray-200">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Taxa de Entrega (R$)
@@ -976,14 +980,20 @@ export default function StoreForm({
 
               {/* Opção 2: Taxa por Bairro */}
               {availableNeighborhoods.length > 0 && (
-                <div className="border-2 rounded-lg p-4" style={{borderColor: deliveryType === 'neighborhood' ? '#3b82f6' : '#d1d5db'}}>
+                <div
+                  className="border-2 rounded-lg p-4"
+                  style={{
+                    borderColor:
+                      deliveryType === "neighborhood" ? "#3b82f6" : "#d1d5db",
+                  }}
+                >
                   <div className="flex items-start gap-3">
                     <input
                       type="radio"
                       id="delivery-neighborhood"
                       name="deliveryType"
                       value="neighborhood"
-                      checked={deliveryType === 'neighborhood'}
+                      checked={deliveryType === "neighborhood"}
                       onChange={(e) => setDeliveryType(e.target.value)}
                       className="mt-1 w-4 h-4 text-blue-600 cursor-pointer"
                     />
@@ -995,13 +1005,13 @@ export default function StoreForm({
                         Taxa por Bairro (Opcional)
                       </label>
                       <p className="text-xs text-gray-500 mt-1">
-                        Defina taxas diferentes para cada bairro. Deixe em branco (0)
-                        para entrega grátis.
+                        Defina taxas diferentes para cada bairro. Deixe em
+                        branco (0) para entrega grátis.
                       </p>
                     </div>
                   </div>
 
-                  {deliveryType === 'neighborhood' && (
+                  {deliveryType === "neighborhood" && (
                     <div className="mt-4 ml-7 pt-4 border-t border-gray-200 space-y-4">
                       <button
                         type="button"
@@ -1010,7 +1020,9 @@ export default function StoreForm({
                         }
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                       >
-                        {showNeighborhoodFeesForm ? "Ocultar Bairros" : "Configurar Bairros"}
+                        {showNeighborhoodFeesForm
+                          ? "Ocultar Bairros"
+                          : "Configurar Bairros"}
                       </button>
 
                       {showNeighborhoodFeesForm && (
@@ -1022,7 +1034,8 @@ export default function StoreForm({
                                   type="checkbox"
                                   id={`delivery-${neighborhood}`}
                                   checked={
-                                    neighborhoodDeliveryEnabled[neighborhood] || false
+                                    neighborhoodDeliveryEnabled[neighborhood] ||
+                                    false
                                   }
                                   onChange={(e) => {
                                     const isChecked = e.target.checked;
@@ -1038,7 +1051,12 @@ export default function StoreForm({
                                       setNeighborhoodDeliveryFees(rest);
                                     } else {
                                       // Inicializar com taxa 0 se marcado
-                                      if (!(neighborhood in neighborhoodDeliveryFees)) {
+                                      if (
+                                        !(
+                                          neighborhood in
+                                          neighborhoodDeliveryFees
+                                        )
+                                      ) {
                                         setNeighborhoodDeliveryFees({
                                           ...neighborhoodDeliveryFees,
                                           [neighborhood]: 0,
@@ -1066,17 +1084,22 @@ export default function StoreForm({
                                     type="number"
                                     step="1"
                                     min="0"
-                                    value={neighborhoodDeliveryFees[neighborhood] || 0}
+                                    value={
+                                      neighborhoodDeliveryFees[neighborhood] ||
+                                      0
+                                    }
                                     onChange={(e) => {
                                       setNeighborhoodDeliveryFees({
                                         ...neighborhoodDeliveryFees,
-                                        [neighborhood]: parseFloat(e.target.value) || 0,
+                                        [neighborhood]:
+                                          parseFloat(e.target.value) || 0,
                                       });
                                     }}
                                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="0.00"
                                   />
-                                  {neighborhoodDeliveryFees[neighborhood] === 0 && (
+                                  {neighborhoodDeliveryFees[neighborhood] ===
+                                    0 && (
                                     <span className="text-sm text-green-600 font-medium">
                                       (Grátis)
                                     </span>

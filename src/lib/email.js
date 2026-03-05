@@ -72,7 +72,7 @@ export async function sendNewUserNotificationToAdmins({ user }) {
         <p><strong>E-mail:</strong> ${user.email}</p>
         <p><strong>Data de Cadastro:</strong> ${new Date(
           user.createdAt,
-        ).toLocaleString("pt-BR")}</p>
+        ).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
       </div>
 
       <div style="margin-top: 20px; text-align: center; color: #6b7280; font-size: 14px;">
@@ -86,7 +86,7 @@ export async function sendNewUserNotificationToAdmins({ user }) {
     
     Nome: ${user.name || "Não informado"}
     E-mail: ${user.email}
-    Data de Cadastro: ${new Date(user.createdAt).toLocaleString("pt-BR")}
+    Data de Cadastro: ${new Date(user.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
   `;
 
   const message = {
@@ -128,7 +128,7 @@ export async function sendNewStoreNotificationToAdmins({ store, owner }) {
         <p><strong>Nome:</strong> ${store.name}</p>
         <p><strong>Slug:</strong> ${store.slug}</p>
         <p><strong>Categoria:</strong> ${store.category}</p>
-        <p><strong>CNPJ:</strong> ${store.cnpj}</p>
+        ${store.cnpj ? `<p><strong>CNPJ:</strong> ${store.cnpj}</p>` : ""}
         <p><strong>Telefone:</strong> ${store.phone}</p>
         <p><strong>E-mail:</strong> ${store.email}</p>
         <p><strong>Cidade:</strong> ${store.city}/${store.state}</p>
@@ -157,7 +157,7 @@ export async function sendNewStoreNotificationToAdmins({ store, owner }) {
 
       <div style="margin-top: 20px; padding: 15px; background-color: #dbeafe; border-radius: 8px; text-align: center;">
         <p style="margin: 0; color: #1e40af;">
-          Data de Cadastro: ${new Date(store.createdAt).toLocaleString("pt-BR")}
+          Data de Cadastro: ${new Date(store.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
         </p>
       </div>
 
@@ -174,7 +174,7 @@ export async function sendNewStoreNotificationToAdmins({ store, owner }) {
     Nome: ${store.name}
     Slug: ${store.slug}
     Categoria: ${store.category}
-    CNPJ: ${store.cnpj}
+    ${store.cnpj ? `CNPJ: ${store.cnpj}` : ""}
     Telefone: ${store.phone}
     E-mail: ${store.email}
     Cidade: ${store.city}/${store.state}
@@ -192,7 +192,7 @@ export async function sendNewStoreNotificationToAdmins({ store, owner }) {
     ${store.city} - ${store.state}
     CEP: ${store.zipCode}
     
-    Data de Cadastro: ${new Date(store.createdAt).toLocaleString("pt-BR")}
+    Data de Cadastro: ${new Date(store.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
   `;
 
   const message = {
@@ -227,34 +227,36 @@ export async function sendOrderNotificationToStore({
   };
 
   const itemsHtml = order.items
-    .map(
-      (item) => {
-        // Build customizations detail for email
-        let customizationsHtml = "";
-        if (item.customizations && typeof item.customizations === "object") {
-          const groups = Object.entries(item.customizations)
-            .filter(([key, val]) => key !== "_observations" && val?.selected)
-            .map(([key, group]) => {
-              const selections = group.selected.map((sel) =>
-                group.type === "quantity" ? `${sel.quantity}x ${sel.name}` : sel.name
-              ).join(", ");
-              return `<strong>${group.groupName}:</strong> ${selections}`;
-            });
-          if (groups.length > 0) {
-            customizationsHtml += `<div style="font-size: 12px; color: #666; margin-top: 4px;">${groups.join("<br/>")}</div>`;
-          }
-          if (item.customizations._observations) {
-            customizationsHtml += `<div style="font-size: 12px; color: #b45309; font-style: italic; margin-top: 4px; background-color: #fffbeb; padding: 4px 8px; border-radius: 4px;">📝 Obs: ${item.customizations._observations}</div>`;
-          }
+    .map((item) => {
+      // Build customizations detail for email
+      let customizationsHtml = "";
+      if (item.customizations && typeof item.customizations === "object") {
+        const groups = Object.entries(item.customizations)
+          .filter(([key, val]) => key !== "_observations" && val?.selected)
+          .map(([key, group]) => {
+            const selections = group.selected
+              .map((sel) =>
+                group.type === "quantity"
+                  ? `${sel.quantity}x ${sel.name}`
+                  : sel.name,
+              )
+              .join(", ");
+            return `<strong>${group.groupName}:</strong> ${selections}`;
+          });
+        if (groups.length > 0) {
+          customizationsHtml += `<div style="font-size: 12px; color: #666; margin-top: 4px;">${groups.join("<br/>")}</div>`;
         }
-        return `<tr>
+        if (item.customizations._observations) {
+          customizationsHtml += `<div style="font-size: 12px; color: #b45309; font-style: italic; margin-top: 4px; background-color: #fffbeb; padding: 4px 8px; border-radius: 4px;">📝 Obs: ${item.customizations._observations}</div>`;
+        }
+      }
+      return `<tr>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.productName}${customizationsHtml}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.price)}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.price * item.quantity)}</td>
     </tr>`;
-      }
-    )
+    })
     .join("");
 
   const htmlContent = `
@@ -266,6 +268,7 @@ export async function sendOrderNotificationToStore({
         <p><strong>Número:</strong> #${order.id.slice(-8).toUpperCase()}</p>
         <p><strong>Data:</strong> ${new Date(order.createdAt).toLocaleString(
           "pt-BR",
+          { timeZone: "America/Sao_Paulo" },
         )}</p>
         <p><strong>Pagamento:</strong> ${
           order.paymentMethod === "pix"
@@ -341,7 +344,7 @@ export async function sendOrderNotificationToStore({
     Novo Pedido Recebido - ${storeName}
     
     Número do Pedido: #${order.id.slice(-8).toUpperCase()}
-    Data: ${new Date(order.createdAt).toLocaleString("pt-BR")}
+    Data: ${new Date(order.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
     Pagamento: ${
       order.paymentMethod === "pix"
         ? "PIX"
@@ -414,7 +417,7 @@ export async function sendTestEmail({ to, subject, message }) {
 
       <div style="margin-top: 20px; text-align: center; color: #6b7280; font-size: 14px;">
         <p>Este é um e-mail de teste do nossolocal.com.br</p>
-        <p>Enviado em: ${new Date().toLocaleString("pt-BR")}</p>
+        <p>Enviado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
       </div>
     </div>
   `;
@@ -425,7 +428,7 @@ export async function sendTestEmail({ to, subject, message }) {
     ${message}
 
     Este é um e-mail de teste do nossolocal.com.br.
-    Enviado em: ${new Date().toLocaleString("pt-BR")}
+    Enviado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
   `;
 
   const emailMessage = {

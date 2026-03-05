@@ -304,6 +304,7 @@ export default function AdminPage() {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -1334,7 +1335,9 @@ export default function AdminPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Data do backup:</span>
                   <span className="font-medium text-gray-900">
-                    {new Date(restoreFileInfo.date).toLocaleString("pt-BR")}
+                    {new Date(restoreFileInfo.date).toLocaleString("pt-BR", {
+                      timeZone: "America/Sao_Paulo",
+                    })}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

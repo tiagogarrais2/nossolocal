@@ -64,9 +64,6 @@ export async function PUT(request, { params }) {
     if (!category || category.trim() === "") {
       errors.push("Categoria é obrigatória");
     }
-    if (!cnpj || cnpj.trim() === "") {
-      errors.push("CNPJ é obrigatório");
-    }
     if (!phone || phone.trim() === "") {
       errors.push("Telefone é obrigatório");
     }
@@ -174,7 +171,7 @@ export async function PUT(request, { params }) {
         description: description?.trim() || null,
         image: image?.trim() || null,
         category: category.trim(),
-        cnpj: cnpj.trim(),
+        cnpj: cnpj?.trim() || null,
         phone: phone.trim(),
         email: email.trim(),
         minimumOrder: minimumOrder || null,
