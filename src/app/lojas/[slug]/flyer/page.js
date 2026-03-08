@@ -20,7 +20,7 @@ function QRCodeStore({ url }) {
   return (
     <QRCodeSVG
       value={url}
-      size={200}
+      size={300}
       level="H"
       includeMargin={false}
       fgColor="#ffffff"
@@ -111,37 +111,40 @@ export default function FlyerLoja() {
       >
         {/* Logos: Site + Loja */}
         <div className="flex items-center justify-center gap-6 w-full">
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center border-4 border-gray-300 rounded-lg p-2">
             <Image
               src="/logo.png"
               alt="Nosso Local"
-              width={140}
-              height={140}
-              className="w-[140px] h-[140px] object-contain"
+              width={200}
+              height={200}
+              className="w-[200px] h-[200px] object-contain"
             />
-            <p className="text-xs text-gray-400 mt-1">NossoLocal.com.br</p>
           </div>
 
           {store.image && (
             <>
-              <div className="text-4xl text-gray-300 font-thin">+</div>
-              <div className="flex flex-col items-center">
+              <div className="text-4xl text-black font-thin">+</div>
+              <div className="flex flex-col items-center border-4 border-gray-300 rounded-lg p-2">
                 <Image
                   src={store.image}
                   alt={store.name}
-                  width={140}
-                  height={140}
-                  className="w-[140px] h-[140px] object-contain rounded-lg"
+                  width={200}
+                  height={200}
+                  className="w-[200px] h-[200px] object-contain rounded-lg"
                 />
-                <p className="text-xs text-gray-400 mt-1">{store.name}</p>
               </div>
             </>
           )}
         </div>
 
         {/* Nome da loja em destaque */}
-        <div className="text-center -mt-2">
-          <h1 className="text-5xl font-black text-blue-600 leading-tight">
+        <div className="text-center -mt-2 w-full">
+          <h1
+            className="font-black text-blue-600 leading-tight whitespace-nowrap"
+            style={{
+              fontSize: `clamp(1.5rem, ${Math.max(2, 10 - store.name.length * 0.15)}rem, 6rem)`,
+            }}
+          >
             {store.name}
           </h1>
           {store.description && (
@@ -154,7 +157,7 @@ export default function FlyerLoja() {
         {/* QR Code central */}
         <div className="flex flex-col items-center space-y-2 -mt-2">
           <p className="text-lg font-bold text-gray-700">
-            📱 Escaneie e visite nossa loja online:
+            📱 Escaneie e visite nossa vitrine online:
           </p>
           <div className="bg-blue-600 p-3 rounded-lg">
             <QRCodeStore url={storeUrl} />
@@ -172,22 +175,6 @@ export default function FlyerLoja() {
           <p className="text-lg font-bold text-blue-600 break-all">
             {storeUrlDisplay}
           </p>
-        </div>
-
-        {/* Endereço e telefone */}
-        <div className="text-center space-y-1 -mt-2">
-          <p className="text-base text-gray-700">📍 {fullAddress}</p>
-          {store.phone && (
-            <p className="text-base text-gray-700">📞 {store.phone}</p>
-          )}
-        </div>
-
-        {/* CTA Final */}
-        <div className="text-center space-y-0.5">
-          <p className="text-2xl font-black text-blue-600">
-            Visite nossa loja online!
-          </p>
-          <p className="text-lg text-gray-600">www.nossolocal.com.br</p>
         </div>
       </div>
 
