@@ -140,7 +140,7 @@ export default function FlyerLoja() {
         {/* Nome da loja em destaque */}
         <div className="text-center -mt-2 w-full">
           <h1
-            className="font-black text-blue-600 leading-tight whitespace-nowrap"
+            className="font-black text-black leading-tight whitespace-nowrap"
             style={{
               fontSize: `clamp(1.5rem, ${Math.max(2, 10 - store.name.length * 0.15)}rem, 6rem)`,
             }}
