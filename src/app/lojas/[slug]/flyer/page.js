@@ -1,7 +1,7 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { getStateDisplay } from "@/lib/utils";
@@ -26,6 +26,38 @@ function QRCodeStore({ url }) {
       fgColor="#ffffff"
       bgColor="#000000"
     />
+  );
+}
+
+function AutoFitTitle({ text }) {
+  const containerRef = useRef(null);
+  const textRef = useRef(null);
+  const [fontSize, setFontSize] = useState(96);
+
+  useEffect(() => {
+    if (!containerRef.current || !textRef.current) return;
+    let size = 96;
+    textRef.current.style.fontSize = `${size}px`;
+    while (
+      textRef.current.scrollWidth > containerRef.current.clientWidth &&
+      size > 12
+    ) {
+      size -= 2;
+      textRef.current.style.fontSize = `${size}px`;
+    }
+    setFontSize(size);
+  }, [text]);
+
+  return (
+    <div ref={containerRef} className="w-full overflow-hidden">
+      <h1
+        ref={textRef}
+        className="font-black text-black leading-tight whitespace-nowrap text-center"
+        style={{ fontSize: `${fontSize}px` }}
+      >
+        {text}
+      </h1>
+    </div>
   );
 }
 
@@ -139,16 +171,9 @@ export default function FlyerLoja() {
 
         {/* Nome da loja em destaque */}
         <div className="text-center -mt-2 w-full">
-          <h1
-            className="font-black text-black leading-tight whitespace-nowrap"
-            style={{
-              fontSize: `clamp(1.5rem, ${Math.max(2, 10 - store.name.length * 0.15)}rem, 6rem)`,
-            }}
-          >
-            {store.name}
-          </h1>
+          <AutoFitTitle text={store.name} />
           {store.description && (
-            <p className="text-xl font-semibold text-green-600 mt-1">
+            <p className="text-xl font-semibold text-black mt-1">
               {store.description}
             </p>
           )}
