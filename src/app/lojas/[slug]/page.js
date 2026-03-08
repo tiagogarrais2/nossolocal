@@ -775,7 +775,7 @@ export default function LojaPage() {
                       <div>
                         {product.priceOnRequest ? (
                           <a
-                            href={`https://wa.me/${store.phone?.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Gostaria de saber o preço do produto: ${product.name}`)}`}
+                            href={`https://wa.me/55${store.phone?.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Gostaria de saber o preço do produto: ${product.name}`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-sm font-semibold flex items-center gap-1.5 inline-flex"

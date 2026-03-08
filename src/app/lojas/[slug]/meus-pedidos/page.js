@@ -599,7 +599,7 @@ export default function MeusPedidosPage() {
                             {/* WhatsApp */}
                             {order.customerWhatsapp && (
                               <a
-                                href={`https://wa.me/${order.customerWhatsapp.replace(/\D/g, "")}`}
+                                href={`https://wa.me/55${order.customerWhatsapp.replace(/\D/g, "")}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium w-fit"

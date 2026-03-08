@@ -398,30 +398,35 @@ export default function ProductPage() {
               )}
 
               {/* Observations field for non-assemblable products */}
-              {!product.isAssemblable && !product.priceOnRequest && product.available && store?.isOpen && session && (product.stock === null || product.stock > 0) && (
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    📝 Observações (opcional)
-                  </label>
-                  <textarea
-                    value={observations}
-                    onChange={(e) => setObservations(e.target.value)}
-                    placeholder="Ex: sem cebola, ponto da carne, embalagem para presente..."
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
-                    rows={3}
-                    maxLength={500}
-                  />
-                  <p className="text-xs text-gray-400 mt-1 text-right">
-                    {observations.length}/500
-                  </p>
-                </div>
-              )}
+              {!product.isAssemblable &&
+                !product.priceOnRequest &&
+                product.available &&
+                store?.isOpen &&
+                session &&
+                (product.stock === null || product.stock > 0) && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      📝 Observações (opcional)
+                    </label>
+                    <textarea
+                      value={observations}
+                      onChange={(e) => setObservations(e.target.value)}
+                      placeholder="Ex: sem cebola, ponto da carne, embalagem para presente..."
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                      rows={3}
+                      maxLength={500}
+                    />
+                    <p className="text-xs text-gray-400 mt-1 text-right">
+                      {observations.length}/500
+                    </p>
+                  </div>
+                )}
 
               {/* Add to Cart Button */}
               <div className="space-y-4">
                 {product.priceOnRequest ? (
                   <a
-                    href={`https://wa.me/${store?.phone?.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Gostaria de saber o preço do produto: ${product.name}`)}`}
+                    href={`https://wa.me/55${store?.phone?.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Gostaria de saber o preço do produto: ${product.name}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full bg-green-600 text-white py-4 px-6 rounded-lg hover:bg-green-700 font-semibold text-lg transition-colors text-center flex items-center justify-center gap-2"
