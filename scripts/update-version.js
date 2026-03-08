@@ -110,7 +110,7 @@ async function getCommitMessage(defaultMessage) {
     const defaultCommitMessage = `chore: bump version to ${newVersion} (sw-v${newSwVersion})`;
     const commitMessage = await getCommitMessage(defaultCommitMessage);
 
-    // Fazer git add e commit
+    // Fazer git add, commit e push
     try {
       execSync("git add -A", {
         stdio: "inherit",
@@ -119,17 +119,23 @@ async function getCommitMessage(defaultMessage) {
         stdio: "inherit",
       });
       console.log(`✅ Commit criado automaticamente`);
+
+      execSync("git push", {
+        stdio: "inherit",
+      });
+      console.log(`✅ Push realizado automaticamente`);
     } catch (error) {
-      console.warn("⚠️ Erro ao fazer commit. Você pode fazer manualmente com:");
+      console.warn(
+        "⚠️ Erro ao fazer commit/push. Você pode fazer manualmente com:",
+      );
       console.warn(`   git commit -m "${commitMessage}"`);
+      console.warn(`   git push`);
     }
 
     console.log("\n📦 Resumo:");
     console.log(`   Versão NPM: ${currentVersion} → ${newVersion}`);
     console.log(`   Cache Version: v${currentSwVersion} → v${newSwVersion}`);
-    console.log(
-      "\n💡 Não esqueça de fazer: git push (se preferir fazer localmente primeiro)",
-    );
+    console.log(`   Commit: ${commitMessage}`);
   } catch (error) {
     console.error("❌ Erro:", error.message);
     process.exit(1);

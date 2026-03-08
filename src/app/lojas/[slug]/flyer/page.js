@@ -1,0 +1,210 @@
+"use client";
+
+import { QRCodeSVG } from "qrcode.react";
+import { useRef, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import { getStateDisplay } from "@/lib/utils";
+
+function QRCodeStore({ url }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="w-[200px] h-[200px] bg-gray-200 rounded" />;
+  }
+
+  return (
+    <QRCodeSVG
+      value={url}
+      size={200}
+      level="H"
+      includeMargin={false}
+      fgColor="#ffffff"
+      bgColor="#000000"
+    />
+  );
+}
+
+export default function FlyerLoja() {
+  const { slug } = useParams();
+  const printRef = useRef();
+  const [store, setStore] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchStore() {
+      try {
+        const response = await fetch(
+          `/api/stores?slug=${encodeURIComponent(slug)}`,
+        );
+        if (!response.ok) throw new Error("Erro ao buscar loja");
+        const data = await response.json();
+        const found = data.stores?.find((s) => s.slug === slug);
+        if (!found) throw new Error("Loja não encontrada");
+        setStore(found);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (slug) fetchStore();
+  }, [slug]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <p className="text-xl text-gray-500">Carregando flyer da loja...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <p className="text-xl text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  const storeUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/lojas/${store.slug}`
+      : `/lojas/${store.slug}`;
+
+  const storeUrlDisplay = `www.nossolocal.com.br/lojas/${store.slug}`;
+
+  const fullAddress = [
+    `${store.street}, ${store.number}`,
+    store.complement,
+    store.neighborhood,
+    `${store.city} - ${getStateDisplay(store.state)}`,
+    store.zipCode,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+      {/* Botão de impressão */}
+      <button
+        onClick={handlePrint}
+        className="mb-8 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition print:hidden"
+      >
+        Imprimir Flyer
+      </button>
+
+      {/* Container A4 */}
+      <div
+        ref={printRef}
+        className="w-[200mm] h-[265mm] bg-white shadow-2xl flex flex-col items-center justify-between p-8 print:shadow-none text-gray-900"
+        style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+      >
+        {/* Logos: Site + Loja */}
+        <div className="flex items-center justify-center gap-6 w-full">
+          <div className="flex flex-col items-center">
+            <Image
+              src="/logo.png"
+              alt="Nosso Local"
+              width={140}
+              height={140}
+              className="w-[140px] h-[140px] object-contain"
+            />
+            <p className="text-xs text-gray-400 mt-1">NossoLocal.com.br</p>
+          </div>
+
+          {store.image && (
+            <>
+              <div className="text-4xl text-gray-300 font-thin">+</div>
+              <div className="flex flex-col items-center">
+                <Image
+                  src={store.image}
+                  alt={store.name}
+                  width={140}
+                  height={140}
+                  className="w-[140px] h-[140px] object-contain rounded-lg"
+                />
+                <p className="text-xs text-gray-400 mt-1">{store.name}</p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Nome da loja em destaque */}
+        <div className="text-center -mt-2">
+          <h1 className="text-5xl font-black text-blue-600 leading-tight">
+            {store.name}
+          </h1>
+          {store.description && (
+            <p className="text-xl font-semibold text-green-600 mt-1">
+              {store.description}
+            </p>
+          )}
+        </div>
+
+        {/* QR Code central */}
+        <div className="flex flex-col items-center space-y-2 -mt-2">
+          <p className="text-lg font-bold text-gray-700">
+            📱 Escaneie e visite nossa loja online:
+          </p>
+          <div className="bg-blue-600 p-3 rounded-lg">
+            <QRCodeStore url={storeUrl} />
+          </div>
+          <p className="text-xs font-black text-gray-900 tracking-wide">
+            ESCANEIE O QR CODE
+          </p>
+        </div>
+
+        {/* URL escrita */}
+        <div className="bg-gray-100 rounded-lg px-6 py-3 text-center -mt-2">
+          <p className="text-sm text-gray-500 mb-1">
+            Ou acesse pelo navegador:
+          </p>
+          <p className="text-lg font-bold text-blue-600 break-all">
+            {storeUrlDisplay}
+          </p>
+        </div>
+
+        {/* Endereço e telefone */}
+        <div className="text-center space-y-1 -mt-2">
+          <p className="text-base text-gray-700">📍 {fullAddress}</p>
+          {store.phone && (
+            <p className="text-base text-gray-700">📞 {store.phone}</p>
+          )}
+        </div>
+
+        {/* CTA Final */}
+        <div className="text-center space-y-0.5">
+          <p className="text-2xl font-black text-blue-600">
+            Visite nossa loja online!
+          </p>
+          <p className="text-lg text-gray-600">www.nossolocal.com.br</p>
+        </div>
+      </div>
+
+      {/* Estilos de impressão */}
+      <style jsx>{`
+        @media print {
+          body {
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

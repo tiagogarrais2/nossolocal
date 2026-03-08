@@ -1071,12 +1071,12 @@ function ProfileContent() {
                         </div>
                       </div>
 
-                      <div className="mt-6 pt-6 border-t border-gray-200">
+                      <div className="mt-6 pt-6 border-t border-gray-200 grid grid-cols-2 gap-3">
                         <button
                           onClick={() =>
                             router.push(`/products?storeId=${store.id}`)
                           }
-                          className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
+                          className="flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
                         >
                           <svg
                             className="w-5 h-5"
@@ -1094,6 +1094,27 @@ function ProfileContent() {
                           <span className="font-semibold">
                             Gerenciar Produtos
                           </span>
+                        </button>
+                        <button
+                          onClick={() =>
+                            router.push(`/lojas/${store.slug}/flyer`)
+                          }
+                          className="flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                            />
+                          </svg>
+                          <span className="font-semibold">Imprimir Flyer</span>
                         </button>
                       </div>
                     </div>
