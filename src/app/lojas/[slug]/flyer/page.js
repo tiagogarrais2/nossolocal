@@ -187,7 +187,7 @@ export default function FlyerLoja() {
           {store.image && (
             <>
               <div className="text-4xl text-black font-thin">+</div>
-              <div className="flex flex-col items-center border-9 border-gray-300 rounded-lg p-2">
+              <div className="flex flex-col items-center border-9 border-gray-300 rounded-lg p-0">
                 <Image
                   src={store.image}
                   alt={store.name}

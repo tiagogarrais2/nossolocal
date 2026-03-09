@@ -1094,10 +1094,16 @@ export default function AdminPage() {
 
           {/* Lojas Recentes */}
           <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b">
+            <div className="p-4 border-b flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-800">
                 Lojas Recentes
               </h2>
+              <Link
+                href="/admin/stores"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Ver todos →
+              </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
