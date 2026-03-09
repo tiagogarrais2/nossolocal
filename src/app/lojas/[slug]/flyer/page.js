@@ -141,39 +141,11 @@ export default function FlyerLoja() {
         className="w-[200mm] h-[265mm] bg-white shadow-2xl flex flex-col items-center justify-between p-8 print:shadow-none text-gray-900"
         style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
       >
-        {/* Logos: Site + Loja */}
-        <div className="flex items-center justify-center gap-6 w-full">
-          <div className="flex flex-col items-center border-4 border-gray-300 rounded-lg p-2">
-            <Image
-              src="/logo.png"
-              alt="Nosso Local"
-              width={200}
-              height={200}
-              className="w-[200px] h-[200px] object-contain"
-            />
-          </div>
-
-          {store.image && (
-            <>
-              <div className="text-4xl text-black font-thin">+</div>
-              <div className="flex flex-col items-center border-4 border-gray-300 rounded-lg p-2">
-                <Image
-                  src={store.image}
-                  alt={store.name}
-                  width={200}
-                  height={200}
-                  className="w-[200px] h-[200px] object-contain rounded-lg"
-                />
-              </div>
-            </>
-          )}
-        </div>
-
         {/* Nome da loja em destaque */}
         <div className="text-center -mt-2 w-full">
           <AutoFitTitle text={store.name} />
           {store.description && (
-            <p className="text-xl font-semibold text-black mt-1">
+            <p className="text-2xl font-semibold text-black mt-1">
               {store.description}
             </p>
           )}
@@ -194,12 +166,38 @@ export default function FlyerLoja() {
 
         {/* URL escrita */}
         <div className="bg-gray-100 rounded-lg px-6 py-3 text-center -mt-2">
-          <p className="text-sm text-gray-500 mb-1">
-            Ou acesse pelo navegador:
-          </p>
+          <p className="text-sm text-gray-500 mb-1">Ou acesse:</p>
           <p className="text-lg font-bold text-blue-600 break-all">
             {storeUrlDisplay}
           </p>
+        </div>
+
+        {/* Logos: Site + Loja */}
+        <div className="flex items-center justify-center gap-6 w-full">
+          <div className="flex flex-col items-center border-9 border-gray-300 rounded-lg p-2">
+            <Image
+              src="/logo.png"
+              alt="Nosso Local"
+              width={300}
+              height={300}
+              className="w-[300px] h-[300px] object-contain"
+            />
+          </div>
+
+          {store.image && (
+            <>
+              <div className="text-4xl text-black font-thin">+</div>
+              <div className="flex flex-col items-center border-9 border-gray-300 rounded-lg p-2">
+                <Image
+                  src={store.image}
+                  alt={store.name}
+                  width={300}
+                  height={300}
+                  className="w-[300px] h-[300px] object-contain rounded-lg"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
