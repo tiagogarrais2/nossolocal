@@ -28,6 +28,7 @@ export default function LojaPage() {
   const [showFloatingCart, setShowFloatingCart] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [assembleProduct, setAssembleProduct] = useState(null);
+  const [zoomStoreImage, setZoomStoreImage] = useState(false);
 
   // Mapeamento de códigos numéricos para siglas de UF
   const stateCodeToUF = {
@@ -381,7 +382,8 @@ export default function LojaPage() {
                   alt={`Logo da ${store.name}`}
                   width={64}
                   height={64}
-                  className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white"
+                  className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+                  onClick={() => setZoomStoreImage(true)}
                 />
                 <div className="flex items-center space-x-3">
                   <h1 className="text-3xl font-bold text-gray-900">
@@ -943,6 +945,36 @@ export default function LojaPage() {
         }}
         adding={!!addingToCart}
       />
+
+      {/* Modal de zoom da imagem da loja */}
+      {zoomStoreImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setZoomStoreImage(false)}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl p-2 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setZoomStoreImage(false)}
+              className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-gray-500 hover:text-gray-800 text-lg leading-none"
+            >
+              ✕
+            </button>
+            <Image
+              src={store.image || "/no-image.png"}
+              alt={store.name}
+              width={400}
+              height={400}
+              className="w-full h-auto rounded-xl object-contain"
+            />
+            <p className="text-center text-sm font-medium text-gray-700 mt-2 mb-1">
+              {store.name}
+            </p>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

@@ -362,10 +362,7 @@ function StoresContent() {
                   pagination.total,
                 )}
                 –
-                {Math.min(
-                  pagination.page * pagination.limit,
-                  pagination.total,
-                )}{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
                 de {pagination.total}
               </p>
               <div className="flex gap-2">
