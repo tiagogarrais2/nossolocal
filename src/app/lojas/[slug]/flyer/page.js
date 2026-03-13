@@ -20,7 +20,7 @@ function QRCodeStore({ url }) {
   return (
     <QRCodeSVG
       value={url}
-      size={300}
+      size={280}
       level="H"
       includeMargin={false}
       fgColor="#ffffff"
