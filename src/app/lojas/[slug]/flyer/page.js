@@ -159,15 +159,11 @@ export default function FlyerLoja() {
           <div className="bg-blue-600 p-3 rounded-lg">
             <QRCodeStore url={storeUrl} />
           </div>
-          <p className="text-xs font-black text-gray-900 tracking-wide">
-            ESCANEIE O QR CODE
-          </p>
         </div>
 
         {/* URL escrita */}
         <div className="bg-gray-100 rounded-lg px-6 py-3 text-center -mt-2">
-          <p className="text-sm text-gray-500 mb-1">Ou acesse:</p>
-          <p className="text-lg font-bold text-blue-600 break-all">
+          <p className="text-lg font-bold text-blue-800 break-all">
             {storeUrlDisplay}
           </p>
         </div>
