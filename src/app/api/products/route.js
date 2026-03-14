@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { revalidateProductPages } from "@/lib/revalidation";
 
 export async function GET(request) {
   try {
@@ -213,6 +214,8 @@ export async function POST(request) {
         },
       });
     });
+
+    revalidateProductPages(store.slug, product.id);
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {

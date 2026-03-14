@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { canManageProduct } from "@/lib/permissions";
+import { revalidateProductPages } from "@/lib/revalidation";
 
 // GET: Buscar produto específico
 export async function GET(request, { params }) {
@@ -173,6 +174,8 @@ export async function PUT(request, { params }) {
 
     console.log("Produto atualizado:", updatedProduct.id);
 
+    revalidateProductPages(existingProduct.store.slug, id);
+
     return NextResponse.json({
       message: "Produto atualizado com sucesso",
       product: updatedProduct,
@@ -224,6 +227,8 @@ export async function DELETE(request, { params }) {
     await prisma.product.delete({
       where: { id },
     });
+
+    revalidateProductPages(existingProduct.store.slug, id);
 
     console.log("Produto deletado:", id);
 

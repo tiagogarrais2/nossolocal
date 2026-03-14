@@ -1,82 +1,30 @@
-"use client";
-
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import { formatPrice } from "../../lib/utils";
+import { formatPrice, getStateDisplay } from "../../lib/utils";
+import prisma from "../../lib/prisma";
 
-function LojasContent() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+export const revalidate = 60;
 
-  const [stores, setStores] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [statesData, setStatesData] = useState({});
-  const [cidade, setCidade] = useState(null);
-  const [estado, setEstado] = useState(null);
-
-  // Carregar localização do localStorage
-  useEffect(() => {
-    // Tentar ler do localStorage
-    const savedCity = localStorage.getItem("selectedCity");
-    const savedState = localStorage.getItem("selectedState");
-
-    if (savedCity && savedState) {
-      setCidade(savedCity);
-      setEstado(savedState);
-    }
-  }, []);
-
-  // Carregar dados de estados para converter código em nome
-  useEffect(() => {
-    const loadStatesData = async () => {
-      try {
-        const response = await fetch("/estados-cidades2.json");
-        const data = await response.json();
-        setStatesData(data);
-      } catch (error) {
-        console.error("Erro ao carregar dados de estados:", error);
-      }
+export async function generateMetadata({ searchParams }) {
+  const { city } = await searchParams;
+  if (city) {
+    return {
+      title: `Lojas em ${city} - Nosso Local`,
+      description: `Encontre as melhores lojas em ${city} no Nosso Local. Shopping virtual para o comércio local.`,
     };
+  }
+  return {
+    title: "Lojas - Nosso Local",
+    description: "Encontre as melhores lojas da sua região no Nosso Local.",
+  };
+}
 
-    loadStatesData();
-  }, []);
+export default async function LojasPage({ searchParams }) {
+  const { city, state } = await searchParams;
 
-  // Buscar lojas
-  useEffect(() => {
-    const fetchStores = async () => {
-      if (!cidade || !estado) return;
-
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `/api/stores?city=${encodeURIComponent(
-            cidade,
-          )}&state=${encodeURIComponent(estado)}`,
-        );
-        if (response.ok) {
-          const data = await response.json();
-
-          console.log("Buscando lojas para:", { cidade, estado });
-          console.log("Lojas encontradas:", data.stores?.length);
-
-          setStores(data.stores || []);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar lojas:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStores();
-  }, [cidade, estado]);
-
-  if (!cidade || !estado) {
+  if (!city || !state) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -94,7 +42,15 @@ function LojasContent() {
     );
   }
 
-  const estadoNome = statesData.states?.[estado] || estado;
+  const stores = await prisma.store.findMany({
+    where: {
+      city: { equals: city.trim(), mode: "insensitive" },
+      state: state.trim(),
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const estadoNome = getStateDisplay(state);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -106,27 +62,23 @@ function LojasContent() {
         <div className="mb-8">
           <div className="bg-white rounded-xl shadow-md p-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Lojas em {cidade}
+              Lojas em {city}
             </h1>
             <p className="text-gray-600">
-              📍 {cidade}, {estadoNome}
+              📍 {city}, {estadoNome}
             </p>
           </div>
         </div>
 
         {/* Stores List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">Carregando lojas...</p>
-          </div>
-        ) : stores.length === 0 ? (
+        {stores.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
             <div className="text-6xl mb-4">🏪</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Nenhuma loja encontrada
             </h2>
             <p className="text-gray-600 mb-6">
-              Ainda não temos lojas cadastradas em {cidade}.
+              Ainda não temos lojas cadastradas em {city}.
             </p>
             <Link
               href="/"
@@ -170,7 +122,7 @@ function LojasContent() {
 
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <div className="flex items-start">
-                      <span className="mr-2">�️</span>
+                      <span className="mr-2">🏠️</span>
                       <span>
                         {store.street}, {store.number}
                         {store.neighborhood && ` - ${store.neighborhood}`}
@@ -243,19 +195,5 @@ function LojasContent() {
 
       <Footer />
     </div>
-  );
-}
-
-export default function LojasPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <p className="text-lg">Carregando...</p>
-        </div>
-      }
-    >
-      <LojasContent />
-    </Suspense>
   );
 }

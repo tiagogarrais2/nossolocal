@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { canManageStore } from "@/lib/permissions";
+import { revalidateStorePages } from "@/lib/revalidation";
 
 export async function PATCH(request, { params }) {
   try {
@@ -46,6 +47,8 @@ export async function PATCH(request, { params }) {
         isOpen: !store.isOpen,
       },
     });
+
+    revalidateStorePages(updatedStore.slug);
 
     return NextResponse.json({
       store: updatedStore,

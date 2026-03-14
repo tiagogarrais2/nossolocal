@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+export const metadata = {
+  title: "Lojistas - Nosso Local",
+  description:
+    "Junte-se aos lojistas que já estão transformando seus negócios com o Nosso Local. O digital é o lugar da sua loja.",
+};
+
 export default function LojistasPage() {
   return (
     <div className="min-h-screen bg-white">

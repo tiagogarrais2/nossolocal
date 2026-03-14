@@ -8,6 +8,7 @@ import {
   canManageStore,
   isUserAdmin,
 } from "@/lib/permissions";
+import { revalidateStorePages } from "@/lib/revalidation";
 
 export async function GET(request) {
   try {
@@ -320,6 +321,8 @@ export async function POST(request) {
       // Não impedir a criação da loja se o e-mail falhar
     }
 
+    revalidateStorePages(store.slug);
+
     return NextResponse.json({ store }, { status: 201 });
   } catch (error) {
     console.error("Erro ao criar loja:", error);
@@ -529,6 +532,8 @@ export async function PUT(request) {
       data: updateData,
     });
 
+    revalidateStorePages(store.slug);
+
     return NextResponse.json({ store });
   } catch (error) {
     console.error("Erro ao atualizar loja:", error);
@@ -568,10 +573,14 @@ export async function DELETE() {
       );
     }
 
+    const storeSlug = existingStore.slug;
+
     // Deletar a loja
     await prisma.store.delete({
       where: { userId: session.user.id },
     });
+
+    revalidateStorePages(storeSlug);
 
     return NextResponse.json({ message: "Loja removida com sucesso" });
   } catch (error) {

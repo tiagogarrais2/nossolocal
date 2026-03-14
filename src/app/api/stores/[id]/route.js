@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { canManageStore, isUserAdmin } from "@/lib/permissions";
+import { revalidateStorePages } from "@/lib/revalidation";
 
 export async function PUT(request, { params }) {
   try {
@@ -192,6 +193,8 @@ export async function PUT(request, { params }) {
 
     console.log("Loja atualizada com sucesso:", store);
 
+    revalidateStorePages(store.slug);
+
     return NextResponse.json({ store });
   } catch (error) {
     console.error("Erro ao atualizar loja:", error);
@@ -253,10 +256,14 @@ export async function DELETE(request, { params }) {
       );
     }
 
+    const storeSlug = existingStore.slug;
+
     // Deletar a loja (produtos e PIX keys serão deletados automaticamente via cascade)
     await prisma.store.delete({
       where: { id },
     });
+
+    revalidateStorePages(storeSlug);
 
     return NextResponse.json({ message: "Loja removida com sucesso" });
   } catch (error) {

@@ -1,10 +1,14 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import TypeWriterHero from "../../components/TypeWriterHero";
+
+export const metadata = {
+  title: "Para Lojistas - Nosso Local",
+  description:
+    "Leve sua loja para o digital! Gerencie produtos, receba pedidos e ofereça delivery aos seus clientes - totalmente grátis.",
+};
 
 export default function ParaLojistasPage() {
   return (

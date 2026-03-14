@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  // standalone é necessário para deploy Docker/self-hosted
+  // Na Vercel, omitir standalone permite ISR via CDN edge caching
+  output: process.env.VERCEL ? undefined : "standalone",
   images: {
     domains: [],
     remotePatterns: [
